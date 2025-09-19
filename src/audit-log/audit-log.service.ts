@@ -1,78 +1,136 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions } from 'typeorm';
-import { AuditLog } from './audit-log.entity';
-import { User } from '../user/user.entity'; // Adjust path
+import { Injectable, Logger } from "@nestjs/common";
+import { AuditLog } from "./entities/audit-log.entity";
+import { LogActionParams } from "./interfaces/log-action-params.interface";
+import { FindAuditLogsQueryDto } from "./dto/find-audit-logs.dto";
+import { AuditLogRepository } from "./repositories/audit-log.repository";
+import { RecentActivityActions } from "src/dashboard/constants/dashboard.constants";
+import { AuditAction } from "./constants/audit-actions.constant";
 
 @Injectable()
 export class AuditLogService {
   private readonly logger = new Logger(AuditLogService.name);
 
-  constructor(
-    @InjectRepository(AuditLog)
-    private auditLogRepository: Repository<AuditLog>,
-  ) {}
+  constructor(private auditLogRepository: AuditLogRepository) {}
 
-  /**
-   * Logs an action performed in the system.
-   *
-   * @param userId The ID of the user performing the action (null for system actions).
-   * @param action A string identifier for the action (e.g., 'CREATE_DOCUMENT', 'SIGN_DOCUMENT').
-   * @param entityType The type of entity affected (e.g., 'Document', 'Signature').
-   * @param entityId The ID of the entity affected.
-   * @param details Optional additional details about the action (e.g., rejection reason).
-   */
-  async logAction(
-    userId: number | null,
-    action: string,
-    entityType: string,
-    entityId: number,
-    details?: Record<string, any>,
-  ): Promise<void> { // Changed return type to Promise<void>
+  async createLogEntry(params: LogActionParams): Promise<void> {
+    const { userId, action, entityType, entityId, details } = params;
+
     this.logger.log(
-      `Logging action: User ${userId || 'System'} performed ${action} on ${entityType} ${entityId}`,
+      `Logging action: User ${userId || "System"} performed ${action} on ${entityType} ${entityId}`,
     );
+
     try {
       const logEntry = this.auditLogRepository.create({
         user: userId ? { id: userId } : null,
-        action: action,
-        entityType: entityType,
-        entityId: entityId,
+        action,
+        entityType,
+        entityId,
         details: details || {},
-        // timestamp is handled by @CreateDateColumn
       });
-      await this.auditLogRepository.save(logEntry); // Save the log entry
-      // Removed return statement
+
+      await this.auditLogRepository.save(logEntry);
     } catch (error) {
       this.logger.error(
         `Failed to save audit log for action ${action} on ${entityType} ${entityId}: ${error.message}`,
         error.stack,
       );
-      // Decide whether to re-throw or just log the error
-      // Not throwing allows the main operation to succeed even if logging fails
-      // Removed 'return null;'
     }
   }
 
   /**
-   * Finds audit logs based on provided options (e.g., filtering by user, entity, action).
-   * Primarily for admin use.
+   * Logs an action performed in the system.
    */
-  async findLogs(options?: FindManyOptions<AuditLog>): Promise<AuditLog[]> {
-    this.logger.log(`Finding audit logs with options: ${JSON.stringify(options)}`);
-    // Add permission checks if necessary
-    return this.auditLogRepository.find({
-      ...options,
-      relations: ['user'], // Load user relation
-      order: { timestamp: 'DESC' }, // Default order: newest first
+  async logAction(
+    userId: number | null,
+    action: AuditAction,
+    entityType: string,
+    entityId: number,
+    details?: Record<string, any>,
+  ): Promise<void> {
+    return this.createLogEntry({
+      userId,
+      action,
+      entityType,
+      entityId,
+      details,
     });
+  }
+
+  /**
+   * Logs an action with client info (IP, user agent)
+   */
+  async logActionWithClientInfo(
+    params: LogActionParams,
+    ipAddress: string,
+    userAgent: string,
+  ): Promise<void> {
+    const details = params.details || {};
+    details.ipAddress = ipAddress;
+    details.userAgent = userAgent;
+
+    return this.createLogEntry({
+      ...params,
+      details,
+    });
+  }
+
+  /**
+   * Finds audit logs based on query parameters.
+   */
+  async findLogs(queryDto: FindAuditLogsQueryDto): Promise<AuditLog[]> {
+    const { userId, entityType, entityId, action, take, skip } = queryDto;
+
+    this.logger.log(
+      `Finding audit logs with filters: ${JSON.stringify(queryDto)}`,
+    );
+
+    const options: any = {
+      where: {},
+      take,
+      skip,
+      order: { timestamp: "DESC" },
+      relations: ["user"],
+    };
+
+    if (userId !== undefined) {
+      options.where = { ...options.where, user: { id: userId } };
+    }
+    if (entityType) {
+      options.where = { ...options.where, entityType };
+    }
+    if (entityId !== undefined) {
+      options.where = { ...options.where, entityId };
+    }
+    if (action) {
+      options.where = { ...options.where, action };
+    }
+
+    return this.auditLogRepository.find(options);
   }
 
   /**
    * Finds audit logs related to a specific entity.
    */
-  async findLogsForEntity(entityType: string, entityId: number): Promise<AuditLog[]> {
-    return this.findLogs({ where: { entityType, entityId } });
+  async findLogsByEntity(
+    entityType: string,
+    entityId: number,
+  ): Promise<AuditLog[]> {
+    this.logger.log(`Finding logs for ${entityType} with ID ${entityId}`);
+
+    return this.auditLogRepository.find({
+      where: { entityType, entityId },
+      relations: ["user"],
+      order: { timestamp: "DESC" },
+    });
+  }
+
+  /**
+   * Finds logs from a specific date range
+   */
+  async findLogsByDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<AuditLog[]> {
+    return this.auditLogRepository.findByDateRange(startDate, endDate);
   }
 }
-

@@ -7,9 +7,9 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { Logger } from "@nestjs/common";
 
 // Configure the gateway, e.g., port, namespace, CORS
 // The port here might conflict if the main NestJS app runs on the same port.
@@ -17,19 +17,21 @@ import { Logger } from '@nestjs/common';
 // Let's assume integration with the main app's port and allow CORS.
 @WebSocketGateway({
   cors: {
-    origin: '*', // Allow all origins for now, restrict in production
+    origin: "*", // Allow all origins for now, restrict in production
   },
   // namespace: '/notifications', // Optional: Use a namespace
 })
-export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
-  private logger: Logger = new Logger('NotificationsGateway');
+  private logger: Logger = new Logger("NotificationsGateway");
   private connectedUsers: Map<number, string> = new Map(); // Map userId to socketId
 
   afterInit(server: Server) {
-    this.logger.log('WebSocket Gateway Initialized');
+    this.logger.log("WebSocket Gateway Initialized");
   }
 
   handleConnection(client: Socket, ...args: any[]) {
@@ -50,18 +52,25 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
     }
     if (userIdToRemove !== null) {
       this.connectedUsers.delete(userIdToRemove);
-      this.logger.log(`Removed user ID ${userIdToRemove} from connected users map.`);
+      this.logger.log(
+        `Removed user ID ${userIdToRemove} from connected users map.`,
+      );
     }
   }
 
   // Example message handler for user registration
-  @SubscribeMessage('registerUser')
-  handleRegisterUser(@MessageBody() userId: number, @ConnectedSocket() client: Socket): void {
+  @SubscribeMessage("registerUser")
+  handleRegisterUser(
+    @MessageBody() userId: number,
+    @ConnectedSocket() client: Socket,
+  ): void {
     if (userId && client.id) {
       this.connectedUsers.set(userId, client.id);
-      this.logger.log(`Registered user ID ${userId} with socket ID ${client.id}`);
+      this.logger.log(
+        `Registered user ID ${userId} with socket ID ${client.id}`,
+      );
       // Optionally send confirmation back to client
-      client.emit('registrationSuccess', { userId: userId });
+      client.emit("registrationSuccess", { userId: userId });
     }
   }
 
@@ -69,11 +78,15 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   sendNotificationToUser(userId: number, event: string, data: any): boolean {
     const socketId = this.connectedUsers.get(userId);
     if (socketId) {
-      this.logger.log(`Sending event '${event}' to user ID ${userId} (socket ID: ${socketId})`);
+      this.logger.log(
+        `Sending event '${event}' to user ID ${userId} (socket ID: ${socketId})`,
+      );
       this.server.to(socketId).emit(event, data);
       return true;
     } else {
-      this.logger.log(`User ID ${userId} not connected, cannot send event '${event}'`);
+      this.logger.log(
+        `User ID ${userId} not connected, cannot send event '${event}'`,
+      );
       return false;
     }
   }
@@ -91,4 +104,3 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   //   // Process message, maybe broadcast or send to specific user
   // }
 }
-

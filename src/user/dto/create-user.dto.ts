@@ -1,53 +1,52 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength, IsInt, IsPositive, IsOptional, IsEnum } from 'class-validator';
-import { UserRole } from '../user.entity';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsOptional,
+} from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { UserRole } from "../enums/user-role.enum";
 
 export class CreateUserDto {
+  @ApiProperty({
+    description: "Nome completo do usuário",
+    example: "João Silva",
+  })
   @IsString()
-  @IsNotEmpty({ message: 'O nome não pode estar vazio.' })
-    @ApiProperty({
-              description: 'Nome completo do usuário',
-              example: "João Silva",
-              type: 'string'
-            })
+  @IsNotEmpty()
   name: string;
 
-  @IsEmail({}, { message: 'Formato de email inválido.' })
-  @IsNotEmpty({ message: 'O email não pode estar vazio.' })
-    @ApiProperty({
-              description: 'Endereço de email do usuário',
-              example: "usuario@exemplo.com",
-              type: 'string'
-            })
+  @ApiProperty({
+    description: "Endereço de email do usuário",
+    example: "joao.silva@exemplo.com",
+  })
+  @IsEmail()
+  @IsNotEmpty()
   email: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'A senha não pode estar vazia.' })
-  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres.' })
-    @ApiProperty({
-              description: 'Senha do usuário (mínimo 8 caracteres)',
-              example: "MinhaSenh@123",
-              type: 'string'
-            })
+  @ApiProperty({
+    description: "Senha do usuário",
+    example: "Senha@123",
+  })
+  @IsString({ message: "A senha precisa ser uma string" })
+  @IsNotEmpty()
   password: string;
 
-  @IsInt({ message: 'O ID do setor deve ser um número inteiro.' })
-  @IsPositive({ message: 'O ID do setor deve ser um número positivo.' })
+  @ApiPropertyOptional({
+    description: "Papel do usuário no sistema",
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  @IsEnum(UserRole)
   @IsOptional()
-    @ApiPropertyOptional({
-              description: 'ID do setor ao qual o usuário pertence',
-              example: 1,
-              type: 'number'
-            }) // Making sector optional for now, adjust if needed
-  sectorId?: number;
+  role?: UserRole;
 
+  @ApiPropertyOptional({
+    description: "ID do setor do usuário",
+    example: 1,
+    nullable: true,
+  })
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Role inválido. Use \'admin\' ou \'user\'.' })
-    @ApiPropertyOptional({
-              description: 'Papel do usuário no sistema (USER, ADMIN)',
-              example: "USER",
-              type: 'string'
-            })
-  role?: UserRole; // Add optional role field
+  sectorId?: number | null;
 }
-

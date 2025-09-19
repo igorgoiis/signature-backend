@@ -1,158 +1,348 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { UserService, UserPublicProfile } from '../user/user.service';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { User } from '../user/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { RefreshToken } from './entities/refresh-token.entity';
-import { jwtConstants } from './constants/jwt.constants';
-import { v4 as uuidv4 } from 'uuid'; // For generating unique refresh token identifiers if needed, or use raw token
+// auth.service.ts
+import {
+  Injectable,
+  UnauthorizedException,
+  Logger,
+  InternalServerErrorException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { UserService } from "../user/user.service";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcryptjs";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { RefreshToken } from "./entities/refresh-token.entity";
+import { jwtConstants } from "./constants/jwt.constants";
+import { JwtPayload } from "./interfaces/jwt-payload.interface";
+import { TokenResponse } from "./interfaces/token-response.interface";
+import { UserPublicProfile } from "src/user/interfaces";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
     @InjectRepository(RefreshToken)
-    private refreshTokenRepository: Repository<RefreshToken>,
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<UserPublicProfile | null> {
-    const user = await this.userService.findByEmailWithPassword(email);
-    if (user && await bcrypt.compare(pass, user.password)) {
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        sector: user.sector,
-      };
+  /**
+   * Valida credenciais de usuário para autenticação local
+   */
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<UserPublicProfile | null> {
+    try {
+      console.log("DEBUG (validateUser): Email for validation:", email);
+      console.log("DEBUG (validateUser): Plain password entered:", pass);
+
+      const user = await this.userService.findByEmailWithPassword(email);
+
+      if (!user) {
+        return null;
+      }
+
+      const passwordMatch = await bcrypt.compare(pass, user.password);
+
+      if (passwordMatch) {
+        const { password, ...result } = user;
+        return result;
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error(
+        `Erro ao validar usuário: ${this.getErrorMessage(error)}`,
+      );
+      return null;
     }
-    return null;
   }
 
-  private async generateTokens(user: UserPublicProfile) {
-    const accessTokenPayload = { email: user.email, sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(accessTokenPayload, {
+  /**
+   * Autentica o usuário e gera tokens de acesso e renovação
+   */
+  async login(user: UserPublicProfile): Promise<TokenResponse> {
+    try {
+      return await this.generateTokens(user);
+    } catch (error) {
+      this.logger.error(
+        `Erro ao realizar login: ${this.getErrorMessage(error)}`,
+      );
+      throw new InternalServerErrorException("Erro ao processar login");
+    }
+  }
+
+  /**
+   * Gera tokens de acesso e renovação para o usuário
+   */
+  private async generateTokens(
+    user: UserPublicProfile,
+  ): Promise<TokenResponse> {
+    const payload: JwtPayload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+      name: user.name,
+    };
+
+    // Gera o token de acesso
+    const accessToken = this.jwtService.sign(payload, {
       secret: jwtConstants.secret,
       expiresIn: jwtConstants.expiresIn,
     });
 
-    // Generate a unique, secure refresh token (e.g., UUID or crypto random bytes)
-    // For simplicity, let's use a JWT as the refresh token itself, signed with a different secret
-    const refreshTokenPayload = { sub: user.id }; // Keep payload minimal
-    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      secret: jwtConstants.refreshSecret,
-      expiresIn: jwtConstants.refreshExpiresIn,
-    });
+    // Gera o token de renovação
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id },
+      {
+        secret: jwtConstants.refreshSecret,
+        expiresIn: jwtConstants.refreshExpiresIn,
+      },
+    );
 
-    // Store the hashed refresh token in the database
+    // Armazena o token de renovação no banco
     await this.storeRefreshToken(refreshToken, user.id);
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      user: user,
+      user,
     };
   }
 
-  private async storeRefreshToken(token: string, userId: number): Promise<void> {
-    // Hash the token before storing
-    const hashedToken = await bcrypt.hash(token, 10);
-    const expiresAt = new Date();
-    // Calculate expiry based on jwtConstants.refreshExpiresIn (e.g., '7d')
-    // This requires parsing the string, a library like 'ms' could help, or manual parsing
-    // Simple example for '7d':
-    expiresAt.setDate(expiresAt.getDate() + 7); // Adjust based on actual expiresIn value
-
-    // Revoke previous tokens for the user (optional, depends on strategy)
-    await this.refreshTokenRepository.update({ userId: userId, isRevoked: false }, { isRevoked: true });
-
-    // Create and save the new refresh token record
-    const refreshTokenRecord = this.refreshTokenRepository.create({
-      userId,
-      hashedToken,
-      expiresAt,
-      isRevoked: false,
-    });
-    await this.refreshTokenRepository.save(refreshTokenRecord);
-  }
-
-  async login(user: UserPublicProfile) {
-    return this.generateTokens(user);
-  }
-
-  async refreshToken(refreshTokenValue: string): Promise<{ access_token: string }> {
+  /**
+   * Armazena o token de renovação no banco de dados
+   */
+  private async storeRefreshToken(
+    token: string,
+    userId: number,
+  ): Promise<void> {
     try {
-      // 1. Verify the refresh token signature and expiration using the refresh secret
+      // Hash do token antes de armazenar
+      const hashedToken = await bcrypt.hash(token, 10);
+
+      // Calcula a data de expiração
+      const expiresAt = this.calculateExpiryDate(jwtConstants.refreshExpiresIn);
+
+      // Revoga tokens anteriores do usuário (opcional)
+      await this.refreshTokenRepository.update(
+        { userId, isRevoked: false },
+        { isRevoked: true },
+      );
+
+      // Cria e salva o novo registro de token
+      const refreshTokenRecord = this.refreshTokenRepository.create({
+        userId,
+        hashedToken,
+        expiresAt,
+        isRevoked: false,
+      });
+
+      await this.refreshTokenRepository.save(refreshTokenRecord);
+    } catch (error) {
+      this.logger.error(
+        `Erro ao armazenar refresh token: ${this.getErrorMessage(error)}`,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível processar o token de autenticação",
+      );
+    }
+  }
+
+  /**
+   * Calcula a data de expiração com base na string de duração
+   */
+  private calculateExpiryDate(duration: string): Date {
+    const expiresAt = new Date();
+    const match = duration.match(/^(\d+)([smhdwy])$/);
+
+    if (match) {
+      const value = parseInt(match[1]);
+      const unit = match[2];
+
+      switch (unit) {
+        case "s": // segundos
+          expiresAt.setSeconds(expiresAt.getSeconds() + value);
+          break;
+        case "m": // minutos
+          expiresAt.setMinutes(expiresAt.getMinutes() + value);
+          break;
+        case "h": // horas
+          expiresAt.setHours(expiresAt.getHours() + value);
+          break;
+        case "d": // dias
+          expiresAt.setDate(expiresAt.getDate() + value);
+          break;
+        case "w": // semanas
+          expiresAt.setDate(expiresAt.getDate() + value * 7);
+          break;
+        case "y": // anos
+          expiresAt.setFullYear(expiresAt.getFullYear() + value);
+          break;
+      }
+    } else {
+      // Padrão: 7 dias
+      expiresAt.setDate(expiresAt.getDate() + 7);
+    }
+
+    return expiresAt;
+  }
+
+  /**
+   * Renova o token de acesso usando o token de renovação
+   */
+  async refreshToken(refreshTokenValue: string): Promise<TokenResponse> {
+    try {
+      // Verifica a assinatura e expiração do token
       const payload = this.jwtService.verify(refreshTokenValue, {
         secret: jwtConstants.refreshSecret,
       });
 
       const userId = payload.sub;
 
-      // 2. Find the stored token record in the database
-      // We need to find the *unrevoked* token that matches the provided one.
-      // Since we store hashes, we can't directly query by the token value.
-      // Strategy: Find all unrevoked tokens for the user, then compare hashes.
+      // Busca tokens não revogados para o usuário
       const storedTokens = await this.refreshTokenRepository.find({
-        where: { userId: userId, isRevoked: false },
-        order: { expiresAt: 'DESC' }, // Get the latest one first
+        where: { userId, isRevoked: false },
+        order: { expiresAt: "DESC" },
       });
 
-      let validStoredToken: RefreshToken | null = null;
-      for (const storedToken of storedTokens) {
-        if (await bcrypt.compare(refreshTokenValue, storedToken.hashedToken)) {
-          validStoredToken = storedToken;
+      // Encontra o token válido comparando hashes
+      const validToken = await this.findValidToken(
+        storedTokens,
+        refreshTokenValue,
+      );
+
+      if (!validToken) {
+        throw new UnauthorizedException("Refresh token inválido ou revogado");
+      }
+
+      // Revoga o token usado
+      await this.revokeToken(validToken);
+
+      // Busca dados atualizados do usuário
+      const user = await this.userService.findOne(userId);
+      if (!user) {
+        throw new UnauthorizedException("Usuário não encontrado");
+      }
+
+      // Gera novo token de acesso
+      return await this.generateTokens(user);
+    } catch (error) {
+      this.logger.error(
+        `Erro ao renovar token: ${this.getErrorMessage(error)}`,
+      );
+
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      throw new UnauthorizedException("Refresh token inválido ou expirado");
+    }
+  }
+
+  /**
+   * Encontra um token válido comparando o valor com os hashes armazenados
+   */
+  private async findValidToken(
+    tokens: RefreshToken[],
+    tokenValue: string,
+  ): Promise<RefreshToken | null> {
+    for (const token of tokens) {
+      if (await bcrypt.compare(tokenValue, token.hashedToken)) {
+        // Verifica se o token expirou
+        if (token.expiresAt < new Date()) {
+          await this.revokeToken(token);
+          throw new ForbiddenException("Token expirado");
+        }
+        return token;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Revoga um token específico
+   */
+  private async revokeToken(token: RefreshToken): Promise<void> {
+    try {
+      token.isRevoked = true;
+      await this.refreshTokenRepository.save(token);
+    } catch (error) {
+      this.logger.error(
+        `Erro ao revogar token: ${this.getErrorMessage(error)}`,
+      );
+      throw new InternalServerErrorException("Erro ao processar o token");
+    }
+  }
+
+  /**
+   * Revoga um token específico pelo seu valor
+   */
+  async revokeRefreshToken(tokenValue: string): Promise<void> {
+    try {
+      // Verifica a assinatura do token para obter o userId
+      const payload = this.jwtService.verify(tokenValue, {
+        secret: jwtConstants.refreshSecret,
+        ignoreExpiration: true, // Permite revogar mesmo tokens expirados
+      });
+
+      const userId = payload.sub;
+
+      // Busca tokens não revogados para o usuário
+      const storedTokens = await this.refreshTokenRepository.find({
+        where: { userId, isRevoked: false },
+      });
+
+      // Encontra e revoga o token correspondente
+      let tokenFound = false;
+      for (const token of storedTokens) {
+        if (await bcrypt.compare(tokenValue, token.hashedToken)) {
+          await this.revokeToken(token);
+          tokenFound = true;
           break;
         }
       }
 
-      // 3. Check if a valid, unrevoked token was found and if it's expired
-      if (!validStoredToken) {
-        throw new UnauthorizedException('Refresh token inválido ou revogado.');
+      if (!tokenFound) {
+        this.logger.debug("Token não encontrado ou já revogado");
       }
-      if (validStoredToken.expiresAt < new Date()) {
-        // Optionally revoke the expired token
-        validStoredToken.isRevoked = true;
-        await this.refreshTokenRepository.save(validStoredToken);
-        throw new UnauthorizedException('Refresh token expirado.');
-      }
-
-      // 4. (Optional but recommended) Revoke the used refresh token to prevent reuse
-      validStoredToken.isRevoked = true;
-      await this.refreshTokenRepository.save(validStoredToken);
-
-      // 5. Fetch the user profile
-      const user = await this.userService.findOne(userId);
-      if (!user) {
-        throw new UnauthorizedException('Usuário não encontrado.');
-      }
-
-      // 6. Generate a new access token (and optionally a new refresh token - rotation)
-      // For simplicity, let's just generate a new access token here.
-      // If implementing rotation, call generateTokens(user) instead.
-      const accessTokenPayload = { email: user.email, sub: user.id, role: user.role };
-      const newAccessToken = this.jwtService.sign(accessTokenPayload, {
-        secret: jwtConstants.secret,
-        expiresIn: jwtConstants.expiresIn,
-      });
-
-      return { access_token: newAccessToken };
-
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      // Handle JWT errors (expired, invalid signature) as Unauthorized
-      throw new UnauthorizedException('Refresh token inválido ou expirado.');
+      this.logger.error(
+        `Erro ao revogar token: ${this.getErrorMessage(error)}`,
+      );
+      // Não lançamos erro aqui para evitar revelar informações sobre tokens
     }
   }
 
-  async revokeRefreshTokenForUser(userId: number): Promise<void> {
-    await this.refreshTokenRepository.update({ userId: userId, isRevoked: false }, { isRevoked: true });
+  /**
+   * Revoga todos os tokens de renovação para um usuário
+   */
+  async revokeAllUserTokens(userId: number): Promise<void> {
+    try {
+      await this.refreshTokenRepository.update(
+        { userId, isRevoked: false },
+        { isRevoked: true },
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro ao revogar tokens do usuário: ${this.getErrorMessage(error)}`,
+      );
+      throw new InternalServerErrorException(
+        "Erro ao processar operação de segurança",
+      );
+    }
   }
 
+  /**
+   * Extrai a mensagem de erro de forma segura
+   */
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
+  }
 }
-

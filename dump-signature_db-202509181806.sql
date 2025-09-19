@@ -1,0 +1,1712 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict 522F1bwef98SvYVX6lgu9nBx48XLDltyIbvPyYkhhHgWqbNM4zjBEaHRXVVwtH0
+
+-- Dumped from database version 15.13 (Debian 15.13-0+deb12u1)
+-- Dumped by pg_dump version 15.14 (Homebrew)
+
+-- Started on 2025-09-18 18:06:05 -03
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 2 (class 3079 OID 16446)
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- TOC entry 3534 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 235 (class 1259 OID 19835)
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.audit_logs (
+    id integer NOT NULL,
+    "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
+    user_id integer,
+    action character varying(100) NOT NULL,
+    entity_type character varying(100),
+    entity_id integer,
+    details jsonb
+);
+
+
+ALTER TABLE public.audit_logs OWNER TO postgres;
+
+--
+-- TOC entry 234 (class 1259 OID 19834)
+-- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.audit_logs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.audit_logs_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3535 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.audit_logs_id_seq OWNED BY public.audit_logs.id;
+
+
+--
+-- TOC entry 231 (class 1259 OID 19796)
+-- Name: document_allocation; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.document_allocation (
+    id integer NOT NULL,
+    document_id integer NOT NULL,
+    filial character varying(255) NOT NULL,
+    centro_custo character varying(255) NOT NULL,
+    valor numeric(10,2) NOT NULL,
+    percentual numeric(5,2) NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.document_allocation OWNER TO postgres;
+
+--
+-- TOC entry 230 (class 1259 OID 19795)
+-- Name: document_allocation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.document_allocation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.document_allocation_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3536 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: document_allocation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.document_allocation_id_seq OWNED BY public.document_allocation.id;
+
+
+--
+-- TOC entry 227 (class 1259 OID 19753)
+-- Name: document_installments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.document_installments (
+    id integer NOT NULL,
+    document_id integer NOT NULL,
+    installment_number integer NOT NULL,
+    amount numeric(10,2) NOT NULL,
+    due_date date NOT NULL,
+    description text,
+    is_paid boolean DEFAULT false NOT NULL,
+    paid_date date,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone,
+    file_id integer
+);
+
+
+ALTER TABLE public.document_installments OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 19752)
+-- Name: document_installments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.document_installments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.document_installments_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3537 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: document_installments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.document_installments_id_seq OWNED BY public.document_installments.id;
+
+
+--
+-- TOC entry 229 (class 1259 OID 19771)
+-- Name: document_signatories; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.document_signatories (
+    id integer NOT NULL,
+    document_id integer NOT NULL,
+    user_id integer NOT NULL,
+    "order" integer DEFAULT 0 NOT NULL,
+    status character varying(255) DEFAULT 'PENDING'::character varying NOT NULL,
+    signed_at timestamp without time zone,
+    rejection_reason text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.document_signatories OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 19770)
+-- Name: document_signatories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.document_signatories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.document_signatories_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3538 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: document_signatories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.document_signatories_id_seq OWNED BY public.document_signatories.id;
+
+
+--
+-- TOC entry 225 (class 1259 OID 19726)
+-- Name: documents; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.documents (
+    id integer NOT NULL,
+    title character varying(255) NOT NULL,
+    description text,
+    tipo_documento character varying(255) DEFAULT 'GENERAL'::character varying NOT NULL,
+    natureza character varying(255) NOT NULL,
+    status character varying(255) DEFAULT 'PENDING'::character varying NOT NULL,
+    valor numeric(10,2),
+    data_vencimento date,
+    observacoes text,
+    owner_id integer,
+    fornecedor_id integer,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone,
+    file_id integer NOT NULL
+);
+
+
+ALTER TABLE public.documents OWNER TO postgres;
+
+--
+-- TOC entry 224 (class 1259 OID 19725)
+-- Name: documents_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.documents_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.documents_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3539 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: documents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.documents_id_seq OWNED BY public.documents.id;
+
+
+--
+-- TOC entry 237 (class 1259 OID 19864)
+-- Name: files; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.files (
+    id integer NOT NULL,
+    file_path character varying(500) NOT NULL,
+    file_name character varying(255) NOT NULL,
+    file_size bigint NOT NULL,
+    mime_type character varying(100) NOT NULL,
+    file_hash character varying(64) NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.files OWNER TO postgres;
+
+--
+-- TOC entry 236 (class 1259 OID 19863)
+-- Name: files_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.files_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.files_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3540 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.files_id_seq OWNED BY public.files.id;
+
+
+--
+-- TOC entry 223 (class 1259 OID 19709)
+-- Name: fornecedores; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.fornecedores (
+    id integer NOT NULL,
+    codigo character varying NOT NULL,
+    cpf_cnpj character varying(14) NOT NULL,
+    razao_social character varying NOT NULL,
+    nome_fantasia character varying,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.fornecedores OWNER TO postgres;
+
+--
+-- TOC entry 222 (class 1259 OID 19708)
+-- Name: fornecedores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.fornecedores_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.fornecedores_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3541 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: fornecedores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.fornecedores_id_seq OWNED BY public.fornecedores.id;
+
+
+--
+-- TOC entry 216 (class 1259 OID 19651)
+-- Name: migrations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.migrations (
+    id integer NOT NULL,
+    "timestamp" bigint NOT NULL,
+    name character varying NOT NULL
+);
+
+
+ALTER TABLE public.migrations OWNER TO postgres;
+
+--
+-- TOC entry 215 (class 1259 OID 19650)
+-- Name: migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.migrations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.migrations_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3542 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.migrations_id_seq OWNED BY public.migrations.id;
+
+
+--
+-- TOC entry 221 (class 1259 OID 19693)
+-- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.refresh_tokens (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id integer NOT NULL,
+    hashed_token character varying NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    is_revoked boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.refresh_tokens OWNER TO postgres;
+
+--
+-- TOC entry 218 (class 1259 OID 19660)
+-- Name: sectors; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sectors (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.sectors OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 19659)
+-- Name: sectors_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.sectors_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sectors_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3543 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: sectors_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.sectors_id_seq OWNED BY public.sectors.id;
+
+
+--
+-- TOC entry 233 (class 1259 OID 19813)
+-- Name: signatures; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.signatures (
+    id integer NOT NULL,
+    document_id integer NOT NULL,
+    user_id integer NOT NULL,
+    signature_data text NOT NULL,
+    position_data jsonb,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.signatures OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 19812)
+-- Name: signatures_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.signatures_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.signatures_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3544 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: signatures_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.signatures_id_seq OWNED BY public.signatures.id;
+
+
+--
+-- TOC entry 220 (class 1259 OID 19674)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    email character varying NOT NULL,
+    password character varying NOT NULL,
+    role character varying DEFAULT 'USER'::character varying NOT NULL,
+    sector_id integer,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp without time zone
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 219 (class 1259 OID 19673)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.users_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3545 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 3297 (class 2604 OID 19838)
+-- Name: audit_logs id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.audit_logs_id_seq'::regclass);
+
+
+--
+-- TOC entry 3291 (class 2604 OID 19799)
+-- Name: document_allocation id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_allocation ALTER COLUMN id SET DEFAULT nextval('public.document_allocation_id_seq'::regclass);
+
+
+--
+-- TOC entry 3282 (class 2604 OID 19756)
+-- Name: document_installments id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_installments ALTER COLUMN id SET DEFAULT nextval('public.document_installments_id_seq'::regclass);
+
+
+--
+-- TOC entry 3286 (class 2604 OID 19774)
+-- Name: document_signatories id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_signatories ALTER COLUMN id SET DEFAULT nextval('public.document_signatories_id_seq'::regclass);
+
+
+--
+-- TOC entry 3277 (class 2604 OID 19729)
+-- Name: documents id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.documents ALTER COLUMN id SET DEFAULT nextval('public.documents_id_seq'::regclass);
+
+
+--
+-- TOC entry 3299 (class 2604 OID 19867)
+-- Name: files id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.files ALTER COLUMN id SET DEFAULT nextval('public.files_id_seq'::regclass);
+
+
+--
+-- TOC entry 3274 (class 2604 OID 19712)
+-- Name: fornecedores id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.fornecedores ALTER COLUMN id SET DEFAULT nextval('public.fornecedores_id_seq'::regclass);
+
+
+--
+-- TOC entry 3264 (class 2604 OID 19654)
+-- Name: migrations id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.migrations ALTER COLUMN id SET DEFAULT nextval('public.migrations_id_seq'::regclass);
+
+
+--
+-- TOC entry 3265 (class 2604 OID 19663)
+-- Name: sectors id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sectors ALTER COLUMN id SET DEFAULT nextval('public.sectors_id_seq'::regclass);
+
+
+--
+-- TOC entry 3294 (class 2604 OID 19816)
+-- Name: signatures id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.signatures ALTER COLUMN id SET DEFAULT nextval('public.signatures_id_seq'::regclass);
+
+
+--
+-- TOC entry 3268 (class 2604 OID 19677)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 3526 (class 0 OID 19835)
+-- Dependencies: 235
+-- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.audit_logs (id, "timestamp", user_id, action, entity_type, entity_id, details) FROM stdin;
+3	2025-09-01 15:26:34.194987-05	1	DOCUMENT_CREATED	Document	3	{"title": "Ocorrência N° CICC-M20250601003653-1-OC-GM.pdf", "rateioCount": 2, "fornecedorId": 1, "installmentsCount": 4}
+4	2025-09-01 15:30:48.392115-05	5	SIGN_DOCUMENT	Document	3	{"signatoryId": 5, "documentStatus": "PENDING"}
+5	2025-09-01 16:09:30.270101-05	1	DOCUMENT_CREATED	Document	4	{"title": "Operação Feira Livre e Segura.pdf", "rateioCount": 3, "fornecedorId": 1, "installmentsCount": 5}
+6	2025-09-01 16:10:33.532465-05	5	SIGN_DOCUMENT	Document	4	{"signatoryId": 7, "documentStatus": "PENDING"}
+7	2025-09-01 16:11:03.736521-05	1	SIGN_DOCUMENT	Document	4	{"signatoryId": 8, "documentStatus": "COMPLETED"}
+8	2025-09-02 09:34:38.61156-05	1	DOCUMENT_CREATED	Document	5	{"title": "Pdf meet Alex", "rateioCount": 2, "fornecedorId": 3, "installmentsCount": 10}
+9	2025-09-02 09:36:24.22278-05	5	SIGN_DOCUMENT	Document	5	{"signatoryId": 9, "documentStatus": "PENDING"}
+10	2025-09-02 09:38:05.21093-05	1	SIGN_DOCUMENT	Document	5	{"signatoryId": 10, "documentStatus": "COMPLETED"}
+11	2025-09-02 17:03:59.149363-05	17	DOCUMENT_CREATED	Document	6	{"title": "Teste Naturezas", "rateioCount": 3, "fornecedorId": 100, "installmentsCount": 5}
+12	2025-09-02 17:05:08.721451-05	17	SIGN_DOCUMENT	Document	6	{"signatoryId": 11, "documentStatus": "PENDING"}
+13	2025-09-02 17:05:48.851671-05	5	SIGN_DOCUMENT	Document	6	{"signatoryId": 12, "documentStatus": "COMPLETED"}
+14	2025-09-05 08:06:53.354015-05	17	CREATE_DOCUMENT	Document	7	{"title": "Teste Parcelas", "rateioCount": 3, "fornecedorId": 2, "installmentsCount": 5}
+15	2025-09-08 19:36:39.337857-05	17	CREATE_DOCUMENT	Document	8	{"title": "COMSEP - ATA DE REUNIÃO - 01_2025-Manifesto.pdf", "rateioCount": 1, "fornecedorId": 1, "installmentsCount": 5}
+\.
+
+
+--
+-- TOC entry 3522 (class 0 OID 19796)
+-- Dependencies: 231
+-- Data for Name: document_allocation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.document_allocation (id, document_id, filial, centro_custo, valor, percentual, created_at, updated_at, deleted_at) FROM stdin;
+17	8	Matriz Juazeiro	Financeiro	50000.00	100.00	2025-09-08 19:36:38.918622	2025-09-08 19:36:38.918622	\N
+\.
+
+
+--
+-- TOC entry 3518 (class 0 OID 19753)
+-- Dependencies: 227
+-- Data for Name: document_installments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.document_installments (id, document_id, installment_number, amount, due_date, description, is_paid, paid_date, created_at, updated_at, deleted_at, file_id) FROM stdin;
+40	8	1	10000.00	2025-08-07	\N	f	\N	2025-09-08 19:36:38.348226	2025-09-08 19:36:38.348226	\N	\N
+41	8	2	10000.00	2025-09-07	\N	f	\N	2025-09-08 19:36:38.348226	2025-09-08 19:36:38.348226	\N	\N
+42	8	3	10000.00	2025-09-12	\N	f	\N	2025-09-08 19:36:38.348226	2025-09-08 19:36:38.348226	\N	\N
+43	8	4	10000.00	2025-10-07	\N	f	\N	2025-09-08 19:36:38.348226	2025-09-08 19:36:38.348226	\N	\N
+44	8	5	10000.00	2025-11-07	\N	f	\N	2025-09-08 19:36:38.348226	2025-09-08 19:36:38.348226	\N	\N
+\.
+
+
+--
+-- TOC entry 3520 (class 0 OID 19771)
+-- Dependencies: 229
+-- Data for Name: document_signatories; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.document_signatories (id, document_id, user_id, "order", status, signed_at, rejection_reason, created_at, updated_at, deleted_at) FROM stdin;
+14	8	17	1	PENDING	\N	\N	2025-09-08 19:36:37.766944	2025-09-08 19:36:37.766944	\N
+\.
+
+
+--
+-- TOC entry 3516 (class 0 OID 19726)
+-- Dependencies: 225
+-- Data for Name: documents; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.documents (id, title, description, tipo_documento, natureza, status, valor, data_vencimento, observacoes, owner_id, fornecedor_id, created_at, updated_at, deleted_at, file_id) FROM stdin;
+8	COMSEP - ATA DE REUNIÃO - 01_2025-Manifesto.pdf	\N	PAYROLL	SALARIES	PENDING	50000.00	\N	\N	17	1	2025-09-08 19:36:37.201144	2025-09-08 19:36:37.201144	\N	1
+\.
+
+
+--
+-- TOC entry 3528 (class 0 OID 19864)
+-- Dependencies: 237
+-- Data for Name: files; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.files (id, file_path, file_name, file_size, mime_type, file_hash, created_at, updated_at, deleted_at) FROM stdin;
+1	documents/1757378194639-146928362.pdf	COMSEP - ATA DE REUNIAÌO - 01_2025-Manifesto.pdf	194863	application/pdf	46b9c88233555a4971ce798fa13cac0c9759ba37d8b53606024357620622bc6d	2025-09-08 19:36:35.510964	2025-09-08 19:36:35.510964	\N
+\.
+
+
+--
+-- TOC entry 3514 (class 0 OID 19709)
+-- Dependencies: 223
+-- Data for Name: fornecedores; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.fornecedores (id, codigo, cpf_cnpj, razao_social, nome_fantasia, created_at, updated_at, deleted_at) FROM stdin;
+1	2808	38471471959709	TechSolutions Inovação e Desenvolvimento LTDA	TechSolutions Brasil	2025-08-17 18:30:53.523229	2025-08-17 18:30:53.523229	\N
+2	3164	51238960412	PLACIDO ALEXANDRE M NASCIMENTO	PLACIDO ALEXANDRE M NASCIMENTO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+3	631	66157238000148	CAIXA ECONOMICA DB	CAIXA ECONOMICA DB	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+4	3169	10798432000114	CARVALHO MEDEIROS IMP E EXP LTDA	CARVALHO MEDEIROS IMP E EXP LTDA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+5	617	83529573000145	CAIXA ECONOMICA FEDERAL	CAIXA ECONOMICA FEDERAL	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+6	621	06359141000166	B BRASIL -27131-4 LIMITE DE CONTA	B BRASIL -27131-4 LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+7	603	42761003000108	BANCO SAFRA CTA 328389	BANCO SAFRA CTA 328389	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+8	610	73867305000171	BANCO BRADESCO S/A LIMITE DE CONTA	BANCO BRADESCO S/A LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+9	602	92165580000120	BANCO SAFRA	BANCO SAFRA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+10	3180	24267202802	JOAQUIM FERREIRA MEDEIROS NETO/ARMANDO	JOAQUIM FERREIRA MEDEIROS NETO/ARMANDO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+11	3163	14951783610	PAULO CAVALCANTE DE CARVALHO	PAULO CAVALCANTE DE CARVALHO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+12	613	93785543000176	BANCO SAFRA LIMITE DE CONTA 0237891	BANCO SAFRA LIMITE DE CONTA 0237891	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+13	624	68821548000130	BANCO DO BRASIL DB	BANCO DO BRASIL DB	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+14	3183	59134092616	ADAUTO GOMES ARAUJO	ADAUTO GOMES ARAUJO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+15	598	73568291000125	CHEQUES A COMPENSAR CAIXA ECONOMICA 2991	CHEQUES A COMPENSAR CAIXA ECONOMICA 2991	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+16	632	41082343000107	FINANCIAMENTO CDC	FINANCIAMENTO CDC	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+17	3165	38407281502	FRANCISCO CAVALCANTE	FRANCISCO CAVALCANTE	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+18	597	48209719000100	CHEQUES A COMPENSAR BRADESCO 603-3	CHEQUES A COMPENSAR BRADESCO 603-3	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+19	623	84350789000119	BANCO ITAU LIMITE DE CONTA	BANCO ITAU LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+20	3177	73024857183	EDNEIDE GONCALVES	EDNEIDE GONCALVES	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+21	3168	92875106320	MARIA LUIZA LUNA	MARIA LUIZA LUNA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+22	628	18504035000199	BANCO DO NORDESTE DB	BANCO DO NORDESTE DB	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+23	591	79185312000167	CHEQUES A COMPENSAR BB32248	CHEQUES A COMPENSAR BB32248	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+24	3170	43795628160	ANGELITA CAVALCANTE DE CARVALHO	ANGELITA CAVALCANTE DE CARVALHO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+25	616	12053798000181	CAIXA ECONOMICA LIMITE DE CONTA	CAIXA ECONOMICA LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+26	601	85793175000109	CHEQUE A COMPENSAR BB-58212-3 PNZ	CHEQUE A COMPENSAR BB-58212-3 PNZ	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+27	3157	69213742000172	EMPRESTIMOS DE TERCEIROS	EMPRESTIMOS DE TERCEIROS	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+28	620	94326180000182	CHEQUES A COMPENSAR BB C/C 45661	CHEQUES A COMPENSAR BB C/C 45661	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+29	625	82316915000187	BANCO ITAU DB	BANCO ITAU DB	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+30	586	92715320000179	BANCO SANTANDER S/A	BANCO SANTANDER S/A	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+31	4792	53827095000146	DAYCOVAL 736098-5 LIMITE DE CONTA	DAYCOVAL 736098-5 LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+32	608	81246753000112	BANCO ITAU LIMITE DE CONTA	BANCO ITAU LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+33	607	36701492000135	BANCO DO BRASIL S/A LIMITE DE CONTA	BANCO DO BRASIL S/A LIMITE DE CONTA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+34	3179	32817905787	JOSE CAVALCANTE	JOSE CAVALCANTE	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+35	3162	05097262000133	NASCIMENTO E ALEXANDRE LTDA.	NASCIMENTO E ALEXANDRE LTDA.	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+36	104180	01747091537	ARTURO WERIDO ARAUJO PINHEIRO	ARTURO WERIDO ARAUJO PINHEIRO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+37	100349	01751891000261	CARBOTEX QUIMICA IND,COM E PART LTDA	CARBOTEX QUIMICA IND,COM E PART LTDA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+38	100105	01751938514	ALAN CARDEC BARBOSA NASCIMENTO	ALAN CARDEC BARBOSA NASCIMENTO	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+39	100563	01753496000137	CARIOBA PLAZA HOTEL LTDA ME	CARIOBA PLAZA HOTEL LTDA ME	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+40	101322	01757449000323	PETROCARGAS TRANSPORTES RODOVIARIOS DE C	PETROCARGAS TRANSPORTES RODOVIARIOS DE C	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+41	99503	01757481000147	VITRAL PROPAGANDA EXERNA LTDA ME	VITRAL PROPAGANDA EXERNA LTDA ME	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+42	97626	01766034000235	COMERCIAL DE COMUST.E TRANSPORTADORA OAS	COMERCIAL DE COMUST.E TRANSPORTADORA OAS	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+43	102248	01766934595	DIEGO GREGORE DE SOUSA BARBOSA	DIEGO GREGORE DE SOUSA BARBOSA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+44	97293	17993134000142	AUTO POSTO AMBIENTAL LTDA	AUTO POSTO AMBIENTAL LTDA	2025-08-22 02:07:22.799249	2025-08-22 02:07:22.799249	\N
+83	95248	38192486017	LAURA HELENA ALMEIDA	LAURA HELENA ALMEIDA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+84	95249	63648219000177	AGROPET ARARIPE	AGROPET ARARIPE	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+85	95250	52917893007	JOAO CIPRIANO FILHO	JOAO CIPRIANO FILHO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+86	95251	48363705000129	JUCAFLEX	JUCAFLEX	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+87	95252	19549243000100	CASA DO CAMINHONEIRO	CASA DO CAMINHONEIRO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+88	95253	29716403851	CICERO RODRIGUES	CICERO RODRIGUES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+89	95254	41562738051	ELTON PAULO	ELTON PAULO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+90	95255	01323641000191	DISTRIBUIDORA SOUSA	DISTRIBUIDORA SOUSA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+91	95256	30416850767	FRANCISCO ANTONIO MATIAS	FRANCISCO ANTONIO MATIAS	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+92	95257	52038204000114	GALEGO DAS BATERIAS	GALEGO DAS BATERIAS	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+93	95258	28617493029	GLENDA BATISTA DA SILVA	GLENDA BATISTA DA SILVA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+94	95259	47169280521	JOSENILDO SANTOS	JOSENILDO SANTOS	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+95	95260	98162435001	LUIZ GONZAGA FILHO	LUIZ GONZAGA FILHO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+96	95261	67819423732	MARIO SOARES	MARIO SOARES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+97	95262	51496280507	MAGNO BATISTA LOPES	MAGNO BATISTA LOPES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+98	95263	48961037236	NADJA GOMES	NADJA GOMES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+99	95264	12065878400	PAULO ROBERTO SAMPAIO	PAULO ROBERTO SAMPAIO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+100	95265	53841297025	RAIMUNDO NONATO JUNIOR	RAIMUNDO NONATO JUNIOR	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+101	95266	43920178501	SANDRO LIMA	SANDRO LIMA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+102	95267	90173468071	TIMOTEO PEREIRA DE ARAUJO	TIMOTEO PEREIRA DE ARAUJO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+103	95268	18145632000102	AUTO POSTO AVENIDA	AUTO POSTO AVENIDA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+104	95269	25147019000145	POSTO NOVO TEMPO	POSTO NOVO TEMPO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+105	95270	27853651000156	SUPERMERCADO SOL NACENTE	SUPERMERCADO SOL NACENTE	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+106	95271	25162719082	J F M JOAO FILHO	J F M JOAO FILHO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+107	95272	79745162033	ILMA BARBOSA	ILMA BARBOSA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+108	95273	01625347000135	PADARIA CENTRAL	PADARIA CENTRAL	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+109	95274	28415397000147	OUSADIA TRANSPORTES	OUSADIA TRANSPORTES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+110	95275	30195786421	DL RODRIGUES	DL RODRIGUES	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+111	95276	19408793000196	MERCANTIL DO POVO	MERCANTIL DO POVO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+112	95277	35172893000100	JUAZEIRO INFORMÁTICA	JUAZEIRO INFORMÁTICA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+113	95278	23017489000158	DROGARIA MILENA	DROGARIA MILENA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+114	95279	25896347000143	SORVETERIA DOCE VIDA	SORVETERIA DOCE VIDA	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+115	95280	13495873000145	GOMES PRODUTOS AGRICOLAS	GOMES PRODUTOS AGRICOLAS	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+116	95281	02143687000125	TEIXEIRA ELETRO	TEIXEIRA ELETRO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+117	95282	27809351000173	SUPERMERCADO TRADIÇÃO	SUPERMERCADO TRADIÇÃO	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+118	95283	47839506121	GILSON FURIATI	GILSON FURIATI	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+119	95284	01538648000194	DEPOSITO CARIRI	DEPOSITO CARIRI	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+120	95285	40928735000195	ALVORADA AUTO PEÇAS	ALVORADA AUTO PEÇAS	2025-08-22 02:10:03.678618	2025-08-22 02:10:03.678618	\N
+121	3174	13049221000105	CARVALHO MEDEIROS IMPORT. E EXPORT LTD	CARVALHO MEDEIROS IMPORT. E EXPORT LTD	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+122	609	82214057000143	BANCO SANTANDER S/A LIMITE DE CONTA	BANCO SANTANDER S/A LIMITE DE CONTA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+123	594	52165433000170	BANCO HSBC	BANCO HSBC	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+124	606	60534927000136	CHEQUE A COMPENSAR BNB 20745-0	CHEQUE A COMPENSAR BNB 20745-0	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+125	3176	40028318000143	BAHIA PET RECICLAGEM LTDA	BAHIA PET RECICLAGEM LTDA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+126	3166	25173984677	IVANILDO PEREIRA	IVANILDO PEREIRA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+127	5114	74561482000157	BANCO DAYCOVAL S.A	BANCO DAYCOVAL S.A	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+128	3182	29386412711	JOAQUIM FERREIRA MEDEIROS NETO/GONCALO	JOAQUIM FERREIRA MEDEIROS NETO/GONCALO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+129	615	76130548000143	BANCO HSBC LIMITE DE CONTA	BANCO HSBC LIMITE DE CONTA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+130	590	58921473000198	CHEQUES A COMPENSAR SANTANDER C/C	CHEQUES A COMPENSAR SANTANDER C/C	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+131	622	61723040000162	CHEQUE A COMPENSAR BNB 20745-0	CHEQUE A COMPENSAR BNB 20745-0	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+132	630	10924857000152	BANCO HSBC DB	BANCO HSBC DB	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+133	604	43852179000103	BANCO SAFRA CTA 327364-2	BANCO SAFRA CTA 327364-2	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+134	3160	40728395108	JOSELIA CAVALCANTE DE CARVALHO	JOSELIA CAVALCANTE DE CARVALHO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+135	3159	50417386294	ISAIAS CAVALCANTE DE CARVALHO	ISAIAS CAVALCANTE DE CARVALHO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+136	587	94825179000106	BANCO ITAU	BANCO ITAU	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+137	4348	86219435000199	CHEQUES A COMPENSAR SICRED UNICRED 5295-7	CHEQUES A COMPENSAR SICRED UNICRED 5295-7	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+138	588	66154283000100	BANCO BRADESCO S/A	BANCO BRADESCO S/A	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+139	614	72518034000139	BANCO VOTORANTIM LIMITE DE CONTA	BANCO VOTORANTIM LIMITE DE CONTA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+140	4307	37120568000160	CHEQUES A COMPENSAR BRADESCO C/C 025053-8	CHEQUES A COMPENSAR BRADESCO C/C 025053-8	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+141	3178	09128376420	CARVALHO E FREIRE	CARVALHO E FREIRE	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+142	605	97815264000196	BANCO VOTORANTIM	BANCO VOTORANTIM	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+143	3181	23519084626	JOAQUIM FERREIRA MEDEIROS NETO/ELOY	JOAQUIM FERREIRA MEDEIROS NETO/ELOY	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+144	3167	21476593086	AURELIANO DE BARROS	AURELIANO DE BARROS	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+145	600	36429174000113	CHEQUE A COMPENSAR ITAU	CHEQUE A COMPENSAR ITAU	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+146	592	92187453000167	CHEQUES A COMPENSAR UNIBANCO C/C 116530-	CHEQUES A COMPENSAR UNIBANCO C/C 116530-	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+147	599	65249718000172	CHEQUES A COMPENSAR BB 45661-6	CHEQUES A COMPENSAR BB 45661-6	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+148	619	71284096000147	(-) ENCARGOS FINANCEIRO APROPRIAR	(-) ENCARGOS FINANCEIRO APROPRIAR	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+149	626	93820258000163	BANCO BRADESCO DB	BANCO BRADESCO DB	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+150	595	19285367000123	AGENCIA DESENBAHIA	AGENCIA DESENBAHIA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+151	3172	40935716812	ISAAC CAVALCANTE DE CARVALHO	ISAAC CAVALCANTE DE CARVALHO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+152	585	42928517000126	BANCO DO BRASIL S/A	BANCO DO BRASIL S/A	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+153	3161	20749513820	JOSELIA MARIA DE CARVALHO	JOSELIA MARIA DE CARVALHO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+154	611	21950489000189	BANCO DO NORDESTE LIMITE DE CONTA	BANCO DO NORDESTE LIMITE DE CONTA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+155	593	90517862000130	BANCO UNIBANCO 116530	BANCO UNIBANCO 116530	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+156	3175	28136540908	JORGE LUIZ ALVES MOURA	JORGE LUIZ ALVES MOURA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+157	95219	47358296104	IVANA CARMEN	IVANA CARMEN	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+158	95220	15422663000101	J.A EMBALAGENS COM E REP	J.A EMBALAGENS COM E REP	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+159	96256	32719837000105	RENOVACAO CARISMATICA CATOLICA DE JUAZEI	RENOVACAO CARISMATICA CATOLICA DE JUAZEI	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+160	95222	87294089534	JOAO ANTONIO DE ARAUJO	JOAO ANTONIO DE ARAUJO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+161	96251	20194832764	MUNEO TUSURUSAKI	MUNEO TUSURUSAKI	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+162	96930	14536908730	PLACIDO ALEXANDRE	PLACIDO ALEXANDRE	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+163	96886	58236429010	EDNA CRISTINA DE CARVALHO	EDNA CRISTINA DE CARVALHO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+164	95228	03549678000133	FAGAR COMERCIAL	FAGAR COMERCIAL	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+165	95229	97236815402	GERALDO FERREIRA DA SILVA	GERALDO FERREIRA DA SILVA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+166	95230	41386290560	HELENA MOTA NUNES	HELENA MOTA NUNES	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+167	95232	36870152000171	PIS/COFINS	PIS/COFINS	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+168	96896	38572946015	MARIA VERA LUCIA C. ABRANTES	MARIA VERA LUCIA C. ABRANTES	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+169	96900	15206480000170	COSETIP ( AGENCIA DE TAXI)	COSETIP ( AGENCIA DE TAXI)	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+170	95236	82416953000132	RECIBO DE CREDITO	RECIBO DE CREDITO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+171	95066	20493158000108	ACTION AGRO	ACTION AGRO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+172	95238	31069287000121	RESTAURANTE AVENIDA	RESTAURANTE AVENIDA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+173	96906	26031758990	JOSE BATISTA DOS SANTOS	JOSE BATISTA DOS SANTOS	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+174	95243	17842169000100	BAR E RESTAURANTE TIO JOAO	BAR E RESTAURANTE TIO JOAO	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+175	96241	63129784041	RITA MARIA DA SILVA	RITA MARIA DA SILVA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+176	95246	07428574000152	DROGARIA ESPERANCA	DROGARIA ESPERANCA	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+177	95247	16420837000176	LANCHONETE TRANSVALE	LANCHONETE TRANSVALE	2025-08-22 02:10:32.122077	2025-08-22 02:10:32.122077	\N
+178	95286	20415367000156	BARATAO MATERIAIS DE CONSTRUCAO	BARATAO MATERIAIS DE CONSTRUCAO	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+179	95287	27018345000145	POSTO ESMERALDA	POSTO ESMERALDA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+180	95288	38102596000115	COMERCIAL RAMOS	COMERCIAL RAMOS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+181	95289	14825746000143	DOUGLAS SOM E ACESSORIOS	DOUGLAS SOM E ACESSORIOS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+182	95290	12749683000107	FARMACIA AUXILIADORA	FARMACIA AUXILIADORA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+183	95291	58836193000160	FERREIRA MARQUES	FERREIRA MARQUES	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+184	95292	64215783000113	FLORENCE MODAS	FLORENCE MODAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+185	95293	00927057000167	FOGO DE CHAO	FOGO DE CHAO	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+186	95294	33916098000100	GLADSON PRODUCOES	GLADSON PRODUCOES	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+187	95295	48019563022	GLORIZENE CRUZ	GLORIZENE CRUZ	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+188	95296	19245038000183	HIDRAULICA BRASIL	HIDRAULICA BRASIL	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+189	95297	59124680520	JESSICA SOARES	JESSICA SOARES	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+190	95298	23087134000164	JUAZEIRO SEGUROS	JUAZEIRO SEGUROS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+191	95299	31182597000175	LANCHONETE BIG BURGER	LANCHONETE BIG BURGER	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+192	95300	68201937000144	LENNON MATERIAL ESPORTIVO	LENNON MATERIAL ESPORTIVO	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+193	95301	91387524000119	LIVRARIA EDUCATIVA	LIVRARIA EDUCATIVA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+194	95302	07839524000107	LOJA FELICIDADE	LOJA FELICIDADE	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+195	95303	12598764000192	M SILVA INFORMÁTICA	M SILVA INFORMÁTICA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+196	95304	29247068000134	MARQUES TRANSPORTES	MARQUES TRANSPORTES	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+197	95305	62718943000153	MERCEARIA SANTA LUZIA	MERCEARIA SANTA LUZIA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+198	95306	42185097000185	MINAS FERRAMENTAS	MINAS FERRAMENTAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+199	95307	02739160000115	MODA & CIA	MODA & CIA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+200	95308	39812645000157	MONTEIRO FRIOS	MONTEIRO FRIOS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+201	95309	26189053000119	MULTIMARCAS AUTO PEÇAS	MULTIMARCAS AUTO PEÇAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+202	95310	35721897000160	NETO MÓVEIS	NETO MÓVEIS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+203	95311	04837911000111	NEW CAR	NEW CAR	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+204	95312	31408590000188	NOBRE DISTRIBUIDORA	NOBRE DISTRIBUIDORA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+205	95313	71508930000156	NOSSA LOJA	NOSSA LOJA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+206	95314	28905413000182	RAPOSO MATERIAL DE CONSTRUCAO	RAPOSO MATERIAL DE CONSTRUCAO	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+207	95315	70015690000147	REI DAS TINTAS	REI DAS TINTAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+208	95316	15594037000176	SUPERMERCADO E PIRES	SUPERMERCADO E PIRES	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+209	95317	88271462000120	TAVARES AUTO ELÉTRICA	TAVARES AUTO ELÉTRICA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+210	95318	28510743000197	TOSCA MODAS	TOSCA MODAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+211	95319	32175618000109	VIAÇÃO SERRANA	VIAÇÃO SERRANA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+212	95320	19482653000145	VITÓRIA MÓVEIS	VITÓRIA MÓVEIS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+213	95321	25809166000103	XIMBICA AUTO PEÇAS	XIMBICA AUTO PEÇAS	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+214	95322	49372035007	ZILMARA ROCHA	ZILMARA ROCHA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+215	95323	21283042000174	ZOONOSE AGRICOLA	ZOONOSE AGRICOLA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+216	95324	02851769320	ZULMIRA PEREIRA DA SILVA	ZULMIRA PEREIRA DA SILVA	2025-08-22 02:11:04.344398	2025-08-22 02:11:04.344398	\N
+217	95325	37815478000106	FORTE FERRAGENS	FORTE FERRAGENS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+218	95326	16841937000120	ANASTACIO CONSTRUCOES	ANASTACIO CONSTRUCOES	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+219	95327	09713582000114	CELULAR TEC	CELULAR TEC	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+220	95328	21308947000151	SUPERMERCADO LUZITANA	SUPERMERCADO LUZITANA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+221	95329	10892058000192	FOGO NA CHAPA	FOGO NA CHAPA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+222	95330	28416795000139	BAR RESTAURANTE PONTO CERTO	BAR RESTAURANTE PONTO CERTO	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+223	95331	14265897000126	AMIGAO AUTO PEÇAS	AMIGAO AUTO PEÇAS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+224	95332	32481064000178	BAR ROSA DE SARON	BAR ROSA DE SARON	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+225	95333	00954876000132	AVA ADVOCACIA	AVA ADVOCACIA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+226	95334	27361058000149	AUTO ESCOLA ESTRELA	AUTO ESCOLA ESTRELA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+227	95335	28741956000129	BAR DO FUMACA	BAR DO FUMACA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+228	95336	28713054000127	BOM JESUS HOTEL	BOM JESUS HOTEL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+229	95337	59134223000183	CARIRI ARTEFATOS	CARIRI ARTEFATOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+230	95338	25410863000177	CHURRASCARIA CAPIXABA	CHURRASCARIA CAPIXABA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+231	95339	12318965000147	CONSTRULAR	CONSTRULAR	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+232	95340	16807957000178	DROGARIA CENTRAL	DROGARIA CENTRAL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+233	95341	42519857000123	GLICIA EMBALAGENS	GLICIA EMBALAGENS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+234	95342	14839415000139	MERCADO DO PAPEL	MERCADO DO PAPEL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+235	95343	38207426000124	MERCANTIL PATOS	MERCANTIL PATOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+236	95344	04935726000175	MODA URBANA	MODA URBANA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+237	95345	30218749000122	OFICINA 2 IRMAOS	OFICINA 2 IRMAOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+238	95346	24173087000170	PIZZARIA SANTA LUZIA	PIZZARIA SANTA LUZIA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+239	95347	97842130000137	REI DOS PARAFUSOS	REI DOS PARAFUSOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+240	95348	12306873000195	SALAO GLAMOUR	SALAO GLAMOUR	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+241	95349	04576189000183	SERRAGEM LIMA	SERRAGEM LIMA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+242	95350	14278095000195	STYLLO GRÁFICA	STYLLO GRÁFICA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+243	95351	06648076000130	SUPER GÁS BRASIL	SUPER GÁS BRASIL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+244	95352	18930264000158	TRANSPORTADORA UNIÃO	TRANSPORTADORA UNIÃO	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+245	95353	37214985009	VANESSA MORAIS	VANESSA MORAIS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+246	95354	20136852000199	ZEFERINO TRANS	ZEFERINO TRANS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+247	95355	98126034000158	AGROVET	AGROVET	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+248	95356	13061059000154	ANDRADINA AUTO PEÇAS	ANDRADINA AUTO PEÇAS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+249	95357	15411968000160	APOIO INFORMÁTICA	APOIO INFORMÁTICA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+250	95358	01128478000168	CANTINHO DO PÃO	CANTINHO DO PÃO	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+251	95359	21730896000100	CONSERTEC	CONSERTEC	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+252	95360	26750918000108	DROGARIA CARIRI	DROGARIA CARIRI	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+253	95361	39548907000132	FAROL AUTO CENTER	FAROL AUTO CENTER	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+254	95362	88746935000137	GALEGO AUTO ELÉTRICA	GALEGO AUTO ELÉTRICA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+255	95363	05793184000167	HOTEL ALVORADA	HOTEL ALVORADA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+256	95364	30186749000121	ITA COMPUTADORES	ITA COMPUTADORES	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+257	95365	06218739000119	KOYA CORTINAS E PERSIANAS	KOYA CORTINAS E PERSIANAS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+258	95366	08231475000136	MIGUEL ARCANJO VEÍCULOS	MIGUEL ARCANJO VEÍCULOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+259	95367	36247098000199	MULTIPAPEL	MULTIPAPEL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+260	95368	24517694000129	ÓTICA BRASIL	ÓTICA BRASIL	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+261	95369	39512021000101	POSTO PETROMIRA	POSTO PETROMIRA	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+262	95370	76219508000164	REI PEÇAS E SERVIÇOS	REI PEÇAS E SERVIÇOS	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+263	95371	01127698000169	SICREDI	SICREDI	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+264	95372	24730184000119	SUPERMERCADO MENEZES	SUPERMERCADO MENEZES	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+265	95373	06712543000146	TOP CARNES	TOP CARNES	2025-08-22 02:11:21.620018	2025-08-22 02:11:21.620018	\N
+\.
+
+
+--
+-- TOC entry 3507 (class 0 OID 19651)
+-- Dependencies: 216
+-- Data for Name: migrations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.migrations (id, "timestamp", name) FROM stdin;
+1	1755441079296	CreateSectorsTable1755441079296
+2	1755441322206	CreateUserTable1755441322206
+3	1755441542079	CreateRefreshTokensTable1755441542079
+4	1755441684464	CreateFornecedoresTable1755441684464
+5	1755443416720	CreateDocumentsTable1755443416720
+6	1755444297167	CreateDocumentInstallmentsTable1755444297167
+7	1755444541580	CreateDocumentSignatoriesTable1755444541580
+8	1755444825739	CreateDocumentAllocationTable1755444825739
+9	1755445016530	CreateSignaturesTable1755445016530
+10	1755445177501	CreateAuditLogsTable1755445177501
+11	1757367841730	AddFilesTable1757367841730
+12	1757369733332	AddFileIdToDocumentsTable1757369733332
+13	1757371428073	RemoveFileColumnsDocumentTable1757371428073
+14	1757421059765	AddFileIdToDocumentInstallments1757421059765
+\.
+
+
+--
+-- TOC entry 3512 (class 0 OID 19693)
+-- Dependencies: 221
+-- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.refresh_tokens (id, user_id, hashed_token, expires_at, is_revoked) FROM stdin;
+90acc597-1a07-4cf1-ba19-41b478cc8375	1	$2b$10$8s1rCc3hAWYxizvV/8.h3eHmJVcZ6rGwe.1W2O1q7jJXd2RrKf64i	2025-08-24 15:21:38.514-05	t
+9dbcbaa6-493e-493c-973c-ca7d614c5bec	1	$2b$10$u9TFi1mfQffKWsnw5VHPCuUjVV4Hplax4O/Y28IQ27Cv0MTWiTSt2	2025-08-25 10:25:21.836-05	t
+24e27944-bc42-4c93-8053-b5648031844a	1	$2b$10$oCMdeW/VH3hg4J.Qj/FgQ.k/ImkGmeyQw.AdT5GOXdIRvHN/S6r8.	2025-08-26 10:21:51.691-05	t
+a70136cb-8460-45b1-9cce-e4eb5c129f2b	1	$2b$10$TOsroq.YVawhpfO6zhujsuDr9ciCJwhRNiPpryfRcWbnOE2BJw4ly	2025-08-27 13:13:10.045-05	t
+c3261a72-470d-4561-987a-b6643f72eded	1	$2b$10$MK02c8bnN8npa5WXlnl//ejR3BQ4QuoofV.VwlEvBuYDv1V8ZjGz2	2025-08-27 20:54:08.627-05	t
+8370d75a-51b2-4325-825e-a221695754f4	1	$2b$10$0LhRwGcvAoqI4umXOSqTCe9kW4BY9NAK/sO4V2PMMQqQbd04V1psG	2025-08-27 20:55:19.501-05	t
+43a4c690-d41a-4f90-9161-06a21331db8d	1	$2b$10$ln0kJCPzi3ePgWJrz.R07e.P/6ZF1jf9RE9T2Rk2ZXo0OPFV04Jgi	2025-08-27 20:55:19.59-05	t
+a2446758-ef5e-4562-8c6a-2d5b0313b95d	1	$2b$10$WUpgA2/u8DS4bdNj21xDNOFZrnYsmkSIOsYobTVFP4rZkso4vhdM2	2025-08-27 20:55:36.425-05	t
+f68f95e2-c65b-4e72-9b84-0ea2da7e50a9	1	$2b$10$iRe7rOvlOkqCi2KdkbTwMOiM1wk8JqN6EupKzmTaqnGbVmnIGL/T6	2025-08-27 21:56:00.508-05	t
+2efd271e-6be5-43cc-b7d2-09cc7e3d5566	1	$2b$10$9xIrOg8vDz770EUes/mgaenttuKPvUB3yDNamDXCpwIPKExVR1Z4.	2025-08-27 21:57:43.024-05	t
+73875484-ca43-46f5-941c-03863dcbba4b	1	$2b$10$97DHRrQSIuMLHHdQbdbbdOmjEkR/vF.mYL.vv7XiJK5kk0V5pq3OC	2025-08-27 21:57:46.092-05	t
+26edcb1a-38a9-4108-aa0b-7295ef3af14b	1	$2b$10$ehxhYPFI34LD43SusF4jV./X7tXyme5Y8FeE38sIA3V.evXH.HVg2	2025-08-27 21:57:56.902-05	t
+a2f97c71-9d35-4c6d-a587-71c9e4451488	1	$2b$10$ZFmghl8xAaJS3pUWp0mL7eswd49Cnk5oWM0G/jk.0PkxTfyUU3E6O	2025-08-27 21:58:55.12-05	t
+95a19f23-9b71-4c38-9e5a-b0e0879266a0	1	$2b$10$ZDkP95p/V7agGpVe7Bu6CuDBjtNNWDB3Wi6wSK/13h5l65fMi3.TS	2025-08-27 22:08:54.319-05	t
+f41a8f01-8592-45f8-b246-49616c4c0f65	1	$2b$10$dJWPPa7ko6SJgRgZSyu7t.u3iIu4zpeGhYSw9cKCOr/elmwYQ4pdK	2025-08-28 17:38:38.084-05	t
+f8d15329-9809-4392-943b-893f323397cf	1	$2b$10$O/y8VW8tzdHcqcaTLRHPq.g03R5azKZXnV7aYX1sSqzRqTq/vGcYy	2025-08-28 21:15:53.325-05	t
+2db8b08c-718d-4d89-8c5c-0c3a460e5466	1	$2b$10$iq8Xj9JP2Fc0cImu9EPGG.3Xnfoy.DJXsBS5quN2uC4qfiZhfxh9y	2025-08-28 17:38:57.142-05	t
+d9603f11-a6cf-4909-84a5-f8a687d2ac67	1	$2b$10$l210etndC6RCIq8GA/UI7O2sFm7oSt74/fkNECV.baaUfdcqzNuy6	2025-08-28 18:39:06.237-05	t
+ebb92b57-a600-480d-8da3-7ac79bbcd87a	1	$2b$10$ZDl8.rihlMDgdPlp3cVuTuajIfGmRsiFhjI9Vfg9vbzphlrFcCveW	2025-08-28 18:39:05.623-05	t
+c01d2f9e-c7b3-4a73-b9ea-75f3a71ecef8	1	$2b$10$X2H4XWjQHMPN/5Q5iRqHGeiGTHRjv1LHkuoQDnP3cfCeyVYJdlO.K	2025-08-28 21:17:05.083-05	t
+bc247664-8d88-4372-b01a-4baca3ee9ceb	1	$2b$10$CLNFz58d9C2N7Q0unUxuze6FIuR2Jc/eRqmay0YZKb5Fz9..aPEGa	2025-08-28 18:39:22.338-05	t
+27081006-c01a-45d5-bc26-3ddbab82ceca	1	$2b$10$tI3llF6HZt4bfFBn/CJJ8.Twtb0JJvV4xQIOSHHtimMHclR1X0w0C	2025-08-28 18:39:21.907-05	t
+62c3ba9e-208e-4002-b9c3-25abc7403d00	1	$2b$10$h9CfX83PIde8ZerBUqN7uOj94sf.d.99zAtYP4gp77zK.JhRoR4Au	2025-08-28 18:39:46.179-05	t
+f696baba-6180-4b49-a473-bf729eb73e8b	1	$2b$10$hlyRFq7Zd/psTuCeVEwrleBYV1hv9n6M/v2pbQjGBeJ3QW9a7p9wK	2025-08-28 18:39:45.545-05	t
+45499fc0-0880-420b-a140-c3ff6ca907c9	1	$2b$10$S4gjXmEr6LfTiEk3Cdl58ugohygINq6W8YN34V/t4EOCBmHCKYzlu	2025-08-28 18:40:16.843-05	t
+455821d3-1f43-430a-8b5a-5a350a1c939b	1	$2b$10$zvrKk1nr2XfWiZrzEdVreuULzl/EZzLpuDG6iTzUyw2.Kr6LwYdea	2025-08-28 18:40:52.814-05	t
+7645b660-8ce0-41d3-b9f4-dd8ec9e1bd07	1	$2b$10$xx2wZTO6W0EoSODc6snIH.iGApc6.66/9ssRk9Pbs.FmdR6e53fCa	2025-08-28 21:15:14.002-05	t
+92fd3dac-73af-45d9-80bb-6f4dfb4cec0f	1	$2b$10$cT7D3niVoxbDbW3Hc96tPuOOfCZ60mwd7ONLLZdzqD8FEByqMCNoS	2025-08-28 21:15:24.138-05	t
+6ec58b94-4b96-4f81-814d-deea884bfa73	1	$2b$10$Be/W.ZItnH4tWtLcVMG83e.LMWN/0x4T0X1YoYkwBPX9qlK5AZSL6	2025-09-05 07:16:51.573-05	t
+01f00514-3190-430a-afd1-c71de2ca754a	1	$2b$10$O/TMRIIefVdr9A4oZMgPjuLJn0DTrhWd1brH2.AZwbZTg3s727IVy	2025-09-05 08:25:47.53-05	t
+3771965f-c416-4b5e-9251-959559bce60e	1	$2b$10$e8YWr2DKESA.WosiYqLWFu5D9hsHytShzE.clVOoPZIz3SK13O.rq	2025-09-05 15:06:34.631-05	t
+026eb531-9953-4277-8b3d-a96477ec99ce	1	$2b$10$IfJ9T3VCoTxulpYuENr7fuf9PZyExKCjw89RE3HhnpWk/rbxYY.6u	2025-09-05 08:28:44.382-05	t
+cc0babd8-bd03-41da-b774-c9caf2567459	1	$2b$10$k9tfwPKQN..sWQoXcQquauGtlUc5zNIwjrs41mXL7P0Ca4fp/PavW	2025-09-05 08:35:01.427-05	t
+c42248c0-4838-43af-970e-142e218ece5b	1	$2b$10$2XxtyXdJP8lTiQLw6WnNsOlSEYwElSE/Sc/ap.5pCtAaACB8GbeuS	2025-09-05 08:35:01.543-05	t
+38cf0b37-3ea0-497d-919e-b70a2b3d8354	1	$2b$10$5JR3h2Bo5yk9ZSYBsqhHZO1IggJ6ftaoSOCxMt8NrTTqKZne3oDxe	2025-09-05 09:09:04.429-05	t
+97473cd9-c10d-438b-b205-eb9d59a9f27a	1	$2b$10$ErArPMexdWw8uyIRdeKl5.8FPWbm8Se9VYuN5e.s50V.evzeEF4Ki	2025-09-05 13:55:00.343-05	t
+508720bd-9082-4a6d-8886-fe6a335953fd	1	$2b$10$rwmZxjLyJIUXYcLYxCaXUuWPKJtD5qO5bcvJbh1/EdItMm9N4E/Vu	2025-09-05 13:56:36.254-05	t
+b4027082-49b2-4644-8b66-8c00ee835163	1	$2b$10$w1zgdW7tzzWEOrilqPK2xOTWPbGI9HWtDna9II43dD3lokd.qRdcS	2025-09-05 13:57:24.365-05	t
+1c5d13a9-e709-45b5-8237-9cd62d1a67a6	1	$2b$10$k9hLFCVm.o2H02LgdPif0u0gYcKR3hQnscUU7O83pQuaDtbQ4OyyG	2025-09-05 13:58:54.524-05	t
+abe8305c-d47b-4efc-a31e-151674e47b00	1	$2b$10$2iDp7uor9qSdN8N5i1v78uE/SanuKDipqy05GXpM54ypU1Zi1wMca	2025-09-05 15:06:22.69-05	t
+06634832-ca56-44db-9140-d591ae8782d2	1	$2b$10$92c9.MhrE000DP9Wo/dibOFfjAAGsAg/rjXoxzwEvm1btifeKnfSa	2025-09-05 19:35:14.339-05	t
+14c5022b-efd2-4734-a2f7-89cac649f875	1	$2b$10$4gq1/e9DwFRqVfCHJLx.WuZMWAyjLqwBEqr7Y5NZL5mnkls0QqQmy	2025-09-05 19:35:14.508-05	t
+3a12a141-d09d-446d-b480-b3aaf6a1037e	1	$2b$10$3mfH6hKjAbhjYl04igFU8umq2Cp59ObkPGUphfkqGWPQCOEetopEK	2025-09-07 13:46:10.868-05	t
+b1395dc5-9511-4cbf-af31-ac2095883e95	1	$2b$10$3uw0I91.o0YfRWhSCsTsMOVPXrWmKu3.bvNGESyOTHikgwJQOgXUS	2025-09-07 10:46:31.032-05	t
+e420e818-7f70-47c8-a6d0-9a1821606a82	1	$2b$10$uNDYVKEaU6ZS4NrqatVRKujucCC.rMtjmKA6b1pkHhUkaEeagu/HW	2025-09-07 12:39:14.049-05	t
+19b5fa81-6d6b-4253-8670-25561c29e431	1	$2b$10$Wp.ZbHE9jTZ1Z9hK6AXNgOm/XkTUcnStdBTim5whrn4PL1cYZBfRa	2025-09-07 12:39:14.171-05	t
+0c97e641-a135-4068-976e-b09f5d127d86	1	$2b$10$GI6/oMWtWHXyO8jRJogitur8XAfSuzCIqapsw8Mst82y5Eo0iZ0/m	2025-09-07 12:40:17.433-05	t
+da70b402-8842-4d83-b9d5-24fe885ba67c	1	$2b$10$EHa1qatzNIx6ZgpLLUYvDO5sGeaTZATV1vloYOEJffXRsISOeJrtK	2025-09-07 13:46:28.154-05	t
+f940de6d-7a88-415e-be50-c58b69b66992	1	$2b$10$d70Uc24ATYuAYUUxeQg6P.R27A9N8UpwkYT6YSVWoks1l8H8PBRaq	2025-09-07 13:46:55.139-05	t
+0f835fa5-8469-4548-ad4b-7642e4bb9af8	1	$2b$10$mLR3fXZjeCc/RlDw88JOluFaT8yafFnJvV3et8j4IOJ/koMbLI1BG	2025-09-07 15:17:09.844-05	t
+caec6f39-f001-44ab-a305-ac9d6c180511	1	$2b$10$9ykH8yKsik39Pt1I5yzggu/fY39xZlAXYPzCla2Qz4HYL1CF5n55W	2025-09-07 15:20:48.313-05	t
+6ea8668e-d70c-408f-a9d0-a1d1ba415f17	1	$2b$10$nUC.XIybHds2bQu8xKFnd.RX2aiNnqcM3IQPFymlLM3fiaCH3WELC	2025-09-07 18:22:02.818-05	t
+10605c8a-1404-4451-b219-5fa7c6ce09ef	1	$2b$10$axE2h5Hy5o6LTMrh5bbC3ObCC2lbXk5LVYNlQ7zDrzknFTFndcU1W	2025-09-07 18:24:41.699-05	t
+239c4491-9929-4224-a967-e4e2f15c99b2	1	$2b$10$VsAVjig8V3i6y5lyI1d6jux7uL6KHWEn3FKlOn.iJEQL5ZrtRmEF2	2025-09-07 18:24:56.614-05	t
+1f6bcac8-d00e-4ed2-8e6e-fb8e5a7c4b7c	1	$2b$10$TWxvXDw9et0D8Z3GpdzQE.RLJEWTPfRtpbJksX4v5mrG0dW/eiT0m	2025-09-07 19:56:26.947-05	t
+02ee2882-04a5-4de7-bac2-9c9b55ac7b95	1	$2b$10$h7VDZ.OG5XcGfYeWZ5PkHO0Ld8afkLFysPkzOL8DqtdG8d2jz3oNe	2025-09-07 20:01:35.783-05	t
+f63a12f6-00d9-45cf-8851-1ed165c11441	1	$2b$10$wZsy4mUZDgCUQiQISpoU2uj3g5zGbAkTANvC6ljycsrlt9vOsLnja	2025-09-07 20:15:17.964-05	t
+b50d8db5-1c78-43bb-be2a-15c7764ff03e	1	$2b$10$FDvFE4G2xzuCwr53W77x5O.rqMEuqSUTCXPy5UfNOTVSdvAoWRTTm	2025-09-07 20:44:05.822-05	t
+052a0d84-899c-4849-8567-11483fe9e072	1	$2b$10$aejl3UjPhq7Wyeuh47nJJ.04QKcrwVvP6YCkAJQ7ssKfRe821IYTi	2025-09-07 21:03:13.278-05	t
+bfc48ad2-d4f7-4c1c-acc1-4c424d6a469c	1	$2b$10$lF4sRUZOwXCO8tMhkMVRFeosqendTkgwYM4nH6JbfOElYKSZtsl8W	2025-09-08 07:32:39.955-05	t
+41795a60-b571-4f3e-a6c8-91ebe43248ec	1	$2b$10$kBwPQ.t/FHRt0YnaBs6QKOuW5IuZxjS3xLiZ0VKzgLR3SkL1NHUyy	2025-09-08 07:32:41.823-05	t
+914eecd4-4314-4fc8-b0b5-b9e20e98b825	1	$2b$10$Qo80A.AuXlx3r228d35GSeP3WSQ2/dM.26PAHjP43Mi0GGtAclOEi	2025-09-08 16:06:11.984-05	t
+86ffc58a-db60-4d27-ba28-9b728cfc7593	1	$2b$10$C6O/wm0hPJm6/BAkOswXsO5lD3G3mam/.luSD8HS7mlDAYxSgYGZe	2025-09-08 16:10:50.374-05	t
+e124f75c-74ec-4f1e-896e-52ad78a2ce7a	1	$2b$10$LbWFQFaUL1DgohVOED0dSeYNWnxf.uqegvKKitHgpFcXPN3Hz22Hq	2025-09-08 07:33:51.799-05	t
+4a3dd167-4b2d-43a8-9b8e-c25a2f3f0c7c	1	$2b$10$kqXrFJ5QgkNINSeMuGL0/uZU7Un3d3VIWxVbiPswpMDR/7gMHTw5S	2025-09-08 08:44:53.496-05	t
+d64095e1-8e74-4f38-a2f8-dad3b3bfd36b	1	$2b$10$SnGIwLQGa67SeNRN6eH/Rup69O40M0fVx3dIRk7Ta2dtAFQTsul..	2025-09-08 08:44:53.606-05	t
+b5cf1645-fb5c-4663-8595-512a4db98f31	1	$2b$10$2Fj9nrYYSFkvzLjSip0DLe6QlfNDbnsoQj2JrmK1taFayoJ248Jby	2025-09-08 08:44:53.842-05	t
+9a3214b8-7d81-4298-91a9-71c2d2450dc9	1	$2b$10$baSg2T690ytpVQHLJroWKOgPxXFMJa2wr9/FaQR9xHGbuf7qa77g6	2025-09-08 08:44:53.926-05	t
+403c46af-9162-42b5-ac18-dcc6594cfd16	1	$2b$10$WwO4C0C9xxfbuGpDekM8Iu2av3EwTlyzdjmAiEzShvDTZZ38H.NI.	2025-09-08 08:44:54.036-05	t
+9d2cc31b-8dcf-4fb9-ba03-7fe98da47d43	1	$2b$10$WxU1rAHxjbgggDI4KRXLne43c9QnUeSZ/cHU9lCWu/XcxC5DnAJXO	2025-09-08 19:52:58.375-05	t
+7c0eaa15-dec7-4c41-829b-46b354ac9ac5	1	$2b$10$5JLXO1PUesSuqbwg7TcGj./F75lZXu/cgjjR2i9CrY1Peihb8WQO2	2025-09-09 08:05:28.961-05	t
+693b1f34-fe37-4087-8b4e-3e402e15839d	1	$2b$10$qE5xImKdQP4rorXusQNxnOkVcPw58Qe0r5svkagyF2xEEiyL8i5eW	2025-09-08 08:45:13.626-05	t
+40b80eb6-6e84-4c8b-aaf3-4c6f3ad40a50	1	$2b$10$3QQhhXBV9D4I/LBE4hg5q.LbHLwfyDfFZPbxat0qmIJohg9N.l3i.	2025-09-08 10:46:12.58-05	t
+45127c14-b21e-4e68-917b-22530bc5638f	1	$2b$10$Cgvq8aCelPvckyGPuXzUvu6l6JqCjSnN2Yy9Oxez6nCcAohZfoqhy	2025-09-08 10:46:12.785-05	t
+d20dae28-6e7e-497d-ba5b-00b0458094ef	1	$2b$10$QFiQ3LAxlGVS5dlg9DQo/O0Ek0.rwwJDGt1kXQ8KFx.i8axP9MPeu	2025-09-08 10:46:12.982-05	t
+609094db-241d-4fe9-a863-6865ddeb0472	1	$2b$10$UZC.48bcJFvqIzXWNJ7l6uNWvBX1QD3vJBvj/.LxW3BJlxwTBJnwe	2025-09-08 10:46:13.087-05	t
+db66ae52-a1fd-4fb0-a12b-9de56b3d34ee	1	$2b$10$2h8/aimn9eCP8qO6shokO.INxtGZ2Nde.srKjouSBK8mPIwc4EsLq	2025-09-08 10:46:25.593-05	t
+fe9aceac-1352-4b9e-9eb1-0ca1b597c584	1	$2b$10$JFuiytYP4F6oUWhPR/AlNegvQ.2kFq32XvFkBbO9dKj5IGQNplVzC	2025-09-08 11:01:21.244-05	t
+4991f7f0-eb58-4ed7-9511-1581ad414197	1	$2b$10$7Evs1ktp6mVZb5arC3fsHuCD.0dg/DQ6xJAwZ6Gw/YJqD9Bpdvzuu	2025-09-08 11:15:06.751-05	t
+b4b3a5f4-c79e-4b23-9ad4-2cb74592601f	1	$2b$10$leJ4h3JGdFIzkldv8bXV1ObtQCTViIBW3x9O0EkfHUboYqVozDH8u	2025-09-08 11:24:13.34-05	t
+cc88b665-54d2-43a1-827f-43bb0bd54a8d	1	$2b$10$x6X.kqKotuSE0Sy21rcyreTrpkplT3OBlM0g1GKQ.FmvplIWv8Ts2	2025-09-08 14:17:42.22-05	t
+02983e62-0d3c-465f-b5f5-95b517293f39	1	$2b$10$pU9EjU4mHiTB4FxS6MPHV.uKeF88zMYAInad8djALjEfO5HQO2FKC	2025-09-08 14:20:50.198-05	t
+1746b790-4479-4984-9826-c4fe641a2981	1	$2b$10$PNwY2NrYSwXgf1uW.HRaUeoMz1OY4G1dduu4MnOjhcFpYnHBtyzDa	2025-09-08 14:50:28.167-05	t
+468bb1ab-46b3-44e2-8ae7-e33c22e09110	5	$2b$10$3TZN0gEPClH9mNOJyZTpnubLTfPkXOLu1jmD0U4ClzpIHC0WPsmdG	2025-09-08 15:27:26.797-05	t
+5b9012bb-7b59-4f88-9c68-fe59a9215b14	5	$2b$10$577dum3rRPtazHYm.cr67uxvTEh4daNjI5DRJowxAA.u7rlHGwWvW	2025-09-08 15:54:42.221-05	t
+da8c0e79-76a6-440e-8760-2177850e17ef	1	$2b$10$KP.GX3H9yVZ1du5FOIPUFuOfIJShP7BNleEoR1A4DK7WfdU8B5tnK	2025-09-08 15:10:18.579-05	t
+e3b8dc01-3069-4865-9cd8-27260273d891	5	$2b$10$m4D8J5wOdmsOVvLIOTiIR.upaLlYzguMWhqs.C3jsu1/u0bZrftR2	2025-09-08 15:55:12.257-05	t
+4cfe07f5-a510-4f93-82a3-8f77fb175987	1	$2b$10$88s4EdpiogYKKao/M/na2.8q.hlW2/fKLA6EtJNaz8bP.wbimoIzi	2025-09-09 08:43:58.678-05	t
+37265b3e-af3e-4350-b610-d7c4d6643d5f	5	$2b$10$x5EOC.s.bnYjtazit1C8i.up/w3KSBsqNMMu9WZtgkEHJS0GggN2W	2025-09-08 16:10:25.466-05	t
+1b1adf37-3e33-40cb-9e71-c5f3be2bc6d6	1	$2b$10$aGLzVf7ff4TAN8wdx9QpuuPy.IhhLkpf4HkppHtnsgKaIKKBaVwCe	2025-09-09 09:23:56.147-05	t
+19c60e95-e60c-46e4-bed9-e0bfde395b57	1	$2b$10$6Okkeqx.7SW4KXG..DQmgebcvJl5DOeZpwjz/C9Kjd35fznInwC7a	2025-09-09 09:37:09.335-05	t
+f62a05a5-f086-4262-b96d-e1fd5b479089	1	$2b$10$fLiWriqRvmrocyOsGn7kIOeIDQVQ3mEfNGkwP58s5DmnrP.bhg44O	2025-09-09 13:20:55.294-05	t
+5942a9df-184b-4cda-b22b-7d39bd062315	1	$2b$10$hGbi3xgwJliWbuB1YmatxefkoEY/09oiJtAZwqbljG3vP7WnIWwu2	2025-09-09 13:28:21.802-05	t
+1363ca59-7dd0-4e6d-a71d-07b5e3ca9b0f	1	$2b$10$qqE3O4Dq7UXaan1zb8U4fuYbwGYn9J5hDMiT.g.jOTp9.E307CF1.	2025-09-09 14:03:17.07-05	t
+cb643b9b-3e49-4465-a123-bd2987500af9	1	$2b$10$kChDY7RYO75MpeUBHjR3mOFc1QtgORzTemS8HtH4QKbIq908tZvb2	2025-09-09 14:05:53.776-05	t
+8ff6c995-ede6-406e-b8f6-a1e2ee5f00ae	17	$2b$10$ehXW1INzJHHWomy7ElJaSOvgi68lpCipzB341tFt.otzuFWciCzOG	2025-09-09 14:37:06.936-05	t
+14d33e53-1e83-4611-961a-832482c08cb3	17	$2b$10$Efg0wpwmw2ukviaM7T8c5eCkitCnD9.iXre7A2mUYmTRn7QQPrtSu	2025-09-09 15:46:33.346-05	t
+1a7bbe81-82e6-4323-ba34-f0e2a33fc7c1	17	$2b$10$cn5so2VkosWNAFLPo02kKOjp4pkbOCdKJy1emgNayeuRIirszhwQC	2025-09-09 15:52:11.331-05	t
+465dc384-a65b-4e81-b360-db8eeb0338ed	1	$2b$10$amBw0.aJ0Kb/UfT667.reuZg.qQGakSL/Xl4naaZ3zaMRRSqMc2Ju	2025-09-09 14:35:22.354-05	t
+41ce08b7-b380-4482-baf6-57bf81864e2b	1	$2b$10$hl1uA7b/lgBuN0.mp/zWNu71hAuTRic/K6o9aq.TE4Cx3noKfdPpm	2025-09-09 15:52:35.613-05	t
+4559f018-e318-499a-a002-d8cad47aae33	1	$2b$10$8HuKa3ZnTba8QrEWC0tpHe416VFy2ALzDCX3FcF2xG9kxa2on0jpG	2025-09-09 16:58:33.742-05	t
+c0ff2cec-271e-42de-9626-65f32fab539c	1	$2b$10$Dgz78857LsVTibSG7LZcgerVEL1aIFlzt/fj/JUovbBZVhEcrOblm	2025-09-09 17:00:32.204-05	t
+ea2e2176-6ef7-4686-a960-193f8d4cb974	17	$2b$10$wS3PGpC8lRWrYlVQUcOjKeayLauB0tNqQACpqXey30341fyeAicWy	2025-09-09 15:52:14.889-05	t
+fa81888f-68a5-4d8e-8cba-91e3e8db76c5	5	$2b$10$K07F02g0.hGs6OwqB7qZQu0qwoYpzolU9yIixKo2h6.kScIp4xdXm	2025-09-09 09:36:06.115-05	t
+d2137d48-93b4-4155-ae89-18a51e14be61	5	$2b$10$X0c8a0SLWwJN7g8jD00qFuL/sUa9xEHpL/P7ZgjCmRVYx8bbpbkCa	2025-09-09 17:05:27.016-05	t
+a4520499-70c4-4027-8f90-7389ef1980af	5	$2b$10$k7DsrBYFJ4bhSjKW8zk5w.P.jAhGSeag.DiDzq4t2wWdY5IVedF4O	2025-09-09 18:06:18.193-05	f
+fda460bf-4a8d-4d73-841d-e16287eb19d0	17	$2b$10$t84b2smgIOpNFbkkPlt0pOO8XXJSZuh15QKifqPq7L0n2oAwFadi6	2025-09-09 17:01:36.195-05	t
+f9d497c3-bdd0-407d-870b-392256315968	17	$2b$10$oigUhUACyzCnaUjWrA/ygeD9GMJyiZZEKUFEIuwRf3rKP5gvXvBwu	2025-09-09 18:14:15.602-05	t
+5653cf70-d755-44a2-99df-40dd7c880db4	17	$2b$10$61ZzTx4Wr0eyMbUM/hXtZuwPCC/2D3CIHM4PyTzmuHsgj98ei4HlK	2025-09-09 19:17:53.615-05	t
+411b1e6c-73ab-481e-af16-c3711acf9a4b	17	$2b$10$XoHRNi2ur6XBwloJRQZybeplfDFb/TuXiV2ebPbzselpoReKMo64u	2025-09-09 19:33:23.353-05	t
+661ddb1f-2d8d-4280-8056-20b7d66b8995	17	$2b$10$jkZf9ltnQc.JW/FJfA73FOXnSChPCJuEaOSV10RwOHbaAXhHx2MG.	2025-09-09 20:35:01.997-05	t
+365dd53b-204d-4534-bc5f-2c281fa1fe5b	17	$2b$10$QW0cLWeooXVHV8mLpqgQ4.Qb780rsKEeQRpNFWwI7/hmZ17BZkXWK	2025-09-09 20:35:04.893-05	t
+2a0c7d1e-e651-485e-9db0-ae948f75b304	17	$2b$10$vc4n4dX66zdGd038I6ypE.xs6KF46BW4qC9VuSsmgwaDBt4o8AigO	2025-09-09 20:37:54.826-05	t
+1d7a5d83-d333-443f-b193-4d8b43294c05	17	$2b$10$0FhGWoao1B714gR1Surx1.L5CzJ4WNc/EynxGf3waSyXzJFrLTMFO	2025-09-09 20:39:15.474-05	t
+6fe92daa-7f38-4274-a2aa-f3493a65ec22	17	$2b$10$a4guALNFY4sCLlMaLpg9rOvwbQ/ypwKOd6JVcZfbP0qxvLh6rALEm	2025-09-09 20:39:39.49-05	t
+03680891-5812-4624-990b-9eca595f7287	17	$2b$10$3BLKUFgH7GJY6DEmqgOQ2.cqeHPPnsR6OCJRDWvZRzOPmeAJLXlgG	2025-09-10 07:50:24.943-05	t
+c856b42a-0a66-4377-a6f3-b52d21cbe5fd	1	$2b$10$abiCrgj28Wr8P4n5h9ft9u6UaC3hqHbTP7EnXeTtGOSXHZIBfDxae	2025-09-09 17:01:07.74-05	t
+513dd057-d825-40d9-b830-41f77630ccb6	17	$2b$10$h.VdVTEcZDQF08a/.wg6qeZhj0/071PreUlEAAPESw64p3UR/MoEi	2025-09-10 07:50:25.277-05	t
+7f5368c5-3c27-477b-b855-87de6ccef116	17	$2b$10$C.QUh27lpJWKn1tvjvYhu.gw4S2N4rBRWXsfEfdfEBbqFJUZUulIi	2025-09-10 07:50:44.688-05	t
+af27fa1c-6156-4ca3-a98f-c5047e5e068c	17	$2b$10$hhUlqaM4z9hfqfmiRLJ/bOfo6tm6tFM.qKEEqR4m8UDHd0xgbI50K	2025-09-10 08:53:34.485-05	t
+fc3e98ef-53cc-4a08-9210-39477f02ce5c	17	$2b$10$hQD/nWLHBMM9BeTUE4wRMOOAnq7tWAoHJ9ezwDMioLCdEblWwyOlS	2025-09-10 08:54:31.361-05	t
+42025752-3c66-4431-93c2-77c61ba73986	17	$2b$10$nS3BNTyYIXrG/Bpj6xI.sOXIstXfFrRelDPeVs.DPxdLaLnopOOSG	2025-09-10 10:01:23.264-05	t
+80d39eee-c9a1-403b-abc6-92efcf7880a6	17	$2b$10$iY3fWK2FqyTtzIh80PqvZ.JQcdGOHRfqe/YuVtFdy9KfhXKl63.IS	2025-09-10 10:02:26.426-05	t
+4b7f23f2-baae-46c4-9886-d6cec10bde07	17	$2b$10$RceMcVqSZJK6iL65zLFx8.pauDaWJtBboJNfT11NcsXT3zox9e5Fe	2025-09-10 12:41:48.619-05	t
+52387532-d789-4c12-8be4-f44d7dc465d5	17	$2b$10$E0kyjykZwTMg0RNFIfY/1O2rWbXraoMJ7WiS7FfwsunP/PEr37oBS	2025-09-10 13:47:15.137-05	t
+02aaa9c5-c38d-43a3-abc3-90399792c15d	17	$2b$10$rpOVJ5O2rkPqFJTABw.JN.UPWDTxSWj9ArUxIgfyO7EssMh8iAq02	2025-09-10 13:49:21.003-05	t
+1038f43a-4998-4659-9653-d1315e8e5730	17	$2b$10$qJuwOKQH0bUAxwGBV145tOmethUJ7Ry6ABDGaGilxcN69c5TAj8qi	2025-09-10 14:49:25.343-05	t
+0af355a4-1954-428f-9627-74e63779af36	17	$2b$10$/ZZu2tq2x9QUvkAi4bCgOOVndtWuJ8dxqgM3nldwxCxwV/KATFcRi	2025-09-10 14:54:58.873-05	t
+806c08ff-eb72-4e7a-a4b0-b116bd560056	17	$2b$10$o8KG4OeMYvdA9tpbOCLnq.1aH6Bv3.lL9.ErjZXtxZYJgT/18a8pi	2025-09-11 07:00:17.75-05	t
+bf0a52c2-e16d-4872-a8f5-033d5ae25679	17	$2b$10$BlUzZVnjYb2mJWtjdgodvu9nR2ykYo4KfD.3ZYAR2DAQLk2b3rLxy	2025-09-11 07:00:19.521-05	t
+e2795835-5a20-4b18-af0c-676569c931ba	17	$2b$10$bbmFgusC8XPHoKhYOD8/bOldpGWorqAE9AUfkXppku3VqIli/ETcu	2025-09-15 15:50:09.524-05	t
+e3c0eb3c-776d-435c-899c-140cfe205761	17	$2b$10$XDYxSyuSQF4i.3XS0LGZXO/U92onSK88HgR7.Ca/RWC3xEYAhQ.Gm	2025-09-11 08:37:14.215-05	t
+60ec5229-90c5-45ba-bd07-7ef3e45cb623	17	$2b$10$DqCP8oL29b0Bd3tx./jGa.r/hK5FYCiZa09eWMvzKoJljBjNIxA6G	2025-09-11 13:59:56.755-05	t
+18909c53-4e00-46d2-a50c-2c3c815bbff7	17	$2b$10$fV0q6QT6v8fZtaZrsuag8.7wDTwWaVbNm3ws0Yg5d8KPVAmv7qVFC	2025-09-11 13:59:56.892-05	t
+58c66085-0201-4c6e-a750-697cbed63695	17	$2b$10$wL5UELkZI2xqLKLaObDd1.DOMjubOLpXsLM0DK/lULQDMzsWgc6Q2	2025-09-11 14:00:19.196-05	t
+55010730-47b6-43cb-b64c-5e070f6c4921	17	$2b$10$kLyuRn3zqbf9Y.tKYLF8kOJ6/xu9tkmb54uFTRbPW7K1uGTFle8cG	2025-09-11 15:24:21.087-05	t
+605f5d5b-a128-4831-9bc4-1c9b587c2695	17	$2b$10$Dw7pgPL9VcbJX/h2/xc7yu1vcYeIVBT5YIVxcvqnuaK.oXrVyU4f.	2025-09-11 15:44:59.778-05	t
+d88c5074-70d2-4e40-9df5-08a2efd4bf4e	17	$2b$10$da9vd/fVOFXb.JQj49deHOhAQqBJAUhhqWm.OA9BB7SExCSVNhM5O	2025-09-12 07:37:19.157-05	t
+b0007e93-005d-4f2e-a4ea-1ba59df29321	17	$2b$10$zp2arzYnAJK5QpvGzsKUU.5YBwpzgxOFk2M8XaG9vrddH1XMckLBW	2025-09-12 07:45:39.622-05	t
+c6fb7b10-776d-4638-8235-5a40b1e91d1d	17	$2b$10$tztAygYepqHk5nTiiTREdOJq2B2C.YOdAL2rC2sZ2zskrCunSyfKG	2025-09-12 09:01:45.221-05	t
+fdab5c89-552a-48b7-9ae0-19dd846589d8	17	$2b$10$DBRB1mz.a3l0OKoGiSDLeuCMoOJkZUFaEa.0lVIIE8OlFXHCmHQdK	2025-09-12 07:49:07.439-05	t
+ede4d9d3-32dd-4bb4-9686-1e4e2f9c6c48	17	$2b$10$EbvTUDc0hzPHXVA.uZcVGu33Eoo6CVhJix5pC5MODWTW.GeLx56N2	2025-09-12 07:59:17.749-05	t
+c8fcdb08-7d02-45a0-989d-33a4a389b30c	17	$2b$10$BV9rf2sjDgaYE93TWSK7BeNUuAewre3IVdmhYiDqhejFxYn8qXOUe	2025-09-12 07:59:17.879-05	t
+c43fefd4-daf9-4bc4-9140-7a0d0461a3c0	17	$2b$10$iZKHuPBbmtg.0Bg0wTns0.h3NZCvOc5e7mTQo7BtMkI0xmEiYKGV2	2025-09-12 07:59:36.812-05	t
+c5cafbe2-f4de-47cd-8473-b0ba2de90015	17	$2b$10$4IQahMURrkJRkJOyS./CHu.bTcIoyYTHsJDLDPEkUKOASesxYBLDC	2025-09-12 09:00:05.438-05	t
+0d8c7eda-6979-4a40-a9c4-d5d6c9ec25a7	17	$2b$10$FewvZ/pilmmeo1KuSVuU8.dihrmWIHecjdP0i7GTBg5i7HYzZy3ni	2025-09-12 09:00:05.741-05	t
+803b4028-2c96-4929-b9c4-08b11726fdfb	17	$2b$10$7T.1Y0p0/NrNIyq6MzBBe.YDk3vtd.lNEMeUI/lR9KfG93QKP9oMi	2025-09-12 10:02:47.464-05	t
+a4837996-abf6-4fd9-8e35-aa3635623136	17	$2b$10$TFd1dgo9hfNI5Gv.ET5RV.1VeJpY3AuROa2VSCc3A/ywjDKloXuJ.	2025-09-12 10:02:47.672-05	t
+e6002ea5-7557-446e-a116-e7f5adbf0aa5	17	$2b$10$QN5lHbOOaq8l9BKmvEgAwerFuCbdMxr2TiC7DZERoR0HPUHGJ2K/C	2025-09-12 10:03:11.304-05	t
+ac5cf9c7-d9c0-4e49-8767-1d882ac1c602	17	$2b$10$ujfcWUFMHyp2UYqHf3QgfuWqCVPmkEm1IMi3tM.tDmG7ve1jbpMu6	2025-09-12 15:42:04.307-05	t
+dd395948-adb9-4ec7-806e-fab104ac40af	17	$2b$10$4ZH/5urt80kZEogE1a2XOOjN52vEcJ19kZ3Pt8mJIYeVSxI8Dd/UO	2025-09-15 10:10:00.28-05	t
+57d3fb8d-f1bb-4353-8f67-a35be02f5000	17	$2b$10$cKl0E.knO1FBGGATX9vsY.2ZhotwE1qzFcvGQ1ILxENkpf7MfBgzW	2025-09-15 07:42:14.589-05	t
+78b122cc-36a3-449d-b8b1-16c68e45965a	17	$2b$10$puftUSyB6fj15HWQbBknKe0F4TspXqNJj81xisxXAl7SG6/z2w50O	2025-09-15 08:42:28.531-05	t
+ee2d8f5b-c88a-4ea6-bde3-85f60927b09a	17	$2b$10$UsbLXm2xd5bV.aBfCIR7u.CDAzhFNqOh7.jkphaj/Yy2D5qB4W91.	2025-09-15 08:42:28.62-05	t
+597ee087-d112-46c8-b9b1-b3a50b37b2ee	17	$2b$10$/4WA857R2556a5YDi08hYulMIGSrbXRros0sHbWT8bgYMlIwV90SK	2025-09-15 08:44:00.839-05	t
+1640fc82-f031-4383-a7f7-3d94769a92e2	17	$2b$10$ryZdK9LDI4KKy5Pw.U9Y6O15EEZzHwExTPwUEjxcRL7IIEBob.e3i	2025-09-15 09:53:06.455-05	t
+574d7550-4261-4fdf-b0a2-97be0da8e812	17	$2b$10$WLgU3vLvGwRoFr8R9Kgh9.kyWBeC8WQ1h/Mw0MnnZIFFR4ZH/8zfy	2025-09-15 09:55:42.723-05	t
+310c05d9-a1cc-4d45-b81c-e4e7a793705a	17	$2b$10$kbSAB6Wq7OyQJFVVvD9jk.Aa/7gC9kdv3CJqDIwu08.mzc9u0ZaX.	2025-09-15 10:09:39.816-05	t
+597c5731-e29a-43d0-9d92-8ceb309c8c00	17	$2b$10$wIY71kjh8GkUN.OlHpp4/Oy2.Bn5zIL3ftCE7XWHqHE1kPY4CxRGe	2025-09-15 10:09:44.091-05	t
+438b78c8-8665-4205-9151-2c0fe5fb7970	17	$2b$10$eiqsfRAtDE9XUl.ujLinSONc/DbK4QWSG86SVOceCemdSo53FfXXW	2025-09-15 11:13:22.598-05	t
+3fcd6861-9341-42fc-868b-825f656cab09	17	$2b$10$FHtnjTFAR2Sx0ib4BBlW3ePcKtJYEoG2zQs6LlxvtyQIWiPqWRPsS	2025-09-15 11:13:22.91-05	t
+07b7f165-7ca7-47e9-9a2a-c8b77281f456	17	$2b$10$Ppb2j4PjUhgTVLPeabHHlu9U01pBlyeUHh6T53cMxoR.g23yODuXC	2025-09-15 11:14:23.038-05	t
+9f67cdd7-02ec-4cbe-828b-135e12412465	17	$2b$10$IqqXZDp/GGiUzesWOl/8aOSjAxI78iPrhTbtMU6DN3V6Fz0McaOVm	2025-09-15 15:36:03.264-05	t
+47d08aba-8be8-4aef-ac59-ae852fe20f20	17	$2b$10$Am43gnGv4c5/MGfy0x1u0.YoSvE1x/atpsK.oZoKjdmbSA90i9Iv2	2025-09-15 15:49:02.585-05	t
+29c3ba23-5e16-476f-a52a-fa26d0468da4	17	$2b$10$cITP9so3xaoid08X8UjYAOzX9z8GpgR4OUGrYCpGTeOpL/feT8.2O	2025-09-15 15:56:12.177-05	t
+08ed15f1-967c-4747-be28-a42569a256a3	17	$2b$10$Rd1OxWU33H5P4slEoc85zecOn5owGaZb9w4OJgLP4gGG2RgF/j1A2	2025-09-15 15:56:12.397-05	t
+6d8e8e2a-1dcb-4024-a1b3-e9867c939e73	17	$2b$10$mIT56.ItNAgg8/QOM7ry/eSWIfk5C6QoYHU8LYO7439MzGJRrYo.e	2025-09-15 16:05:36.053-05	t
+dcc644ea-b7ee-4f51-8c85-bfdd62d8383d	17	$2b$10$vMr2PtvQQvD42cJMFyOcNePp/1ZQXL30EFX9pjmi0wvw25avkBMqK	2025-09-15 17:31:07.155-05	t
+bfade7b5-2922-41b1-9b72-56ff3acd3dfe	17	$2b$10$Ou.LJhp9ly1u.MbHYbk4ZO.nTjbzXpDKQ9mqwYllfUVKFYzlExCMW	2025-09-15 18:41:58.286-05	t
+05d6f32a-d231-4ab0-881a-077a23bdc42a	17	$2b$10$dhl4W4Q5XtUOjk/UZSnIWusLYU4os2bLljJViP7K8jbm2scAnOAB2	2025-09-15 19:29:01.591-05	t
+015128fb-ebb7-41ee-ad2b-259316ff6952	17	$2b$10$pt/lN8y.VWxYZ7sXwR3NTu..Qz1kG2rKyy1aTw9Qo8953WJECju7.	2025-09-15 19:29:01.436-05	t
+a03b5227-172c-4bd1-af5f-4a66f1178f7c	17	$2b$10$QMx/uwpx0A.wiAOX6N4ETeSbB8GCtSL7O9JtWyhC0Y8NNqSNTfkcy	2025-09-15 19:29:01.723-05	t
+f864de9b-1027-42e6-9253-e1ccffef80dd	17	$2b$10$c8lDGb/D1pV4wc3ltZUGc.I8hYMw.UT7WPCQD5nREwPhoyAqmSN3q	2025-09-15 19:29:27.087-05	t
+df19e9b5-de7d-42c5-992b-d7c62aa1c0f0	17	$2b$10$sntJ/1YE2nq8WAd2T/SR2.peogWNnvmVVqD5NPqFTyKUR7bXINEni	2025-09-16 05:47:47.479-05	t
+7e749452-9420-4542-9ae1-4e21041a48ea	17	$2b$10$EfEMOMG9LTIfNNcXMfqL8unh3c9GeKWXyZs5jA4LVocydSPEobRxK	2025-09-16 05:47:47.59-05	t
+4bf20000-5f6b-498d-8a05-28b39a367e30	17	$2b$10$BLSYKm2kTCRpkEHSIZ6rPepviROs/WUvMByKmyzBXcicbIPlBCLjm	2025-09-16 07:27:47.401-05	t
+30999061-014a-44d6-93da-67d7ea003101	17	$2b$10$nZRrYQyH8f9EKiPmy0GFPu5HaIThDGFbFrdArW4QmDhlL0NIJDD2m	2025-09-16 08:33:57.091-05	t
+5dcc6890-c5e0-424a-8116-db254fba5502	17	$2b$10$U9lshKBn/3PGFTzEIJeHdOzHUfMoxEn7uzMupT64kbsWOeDlyxpE.	2025-09-16 08:39:07.392-05	t
+f65e2ad5-e8c7-4f4e-8a64-b200afe16f1e	17	$2b$10$.29IEnPd6/gY6ENWQxEk9uC8fpY7d65O0NIlQMXylxXXaNUI3D4fK	2025-09-16 08:39:07.942-05	t
+f60fc581-2ee7-4558-95b7-84139551aa62	17	$2b$10$2VJjjrpsLJQF/mxNvmvwCu9QfXNdznNYFSXQBwv1P9vEvMML64nq6	2025-09-16 08:39:08.15-05	t
+8334dccf-2f53-4812-883d-38798394ee51	17	$2b$10$zYEHnQE/3pV8W2tHsNe.9OktuqQ3SYuuMI9Vc16nZTGyGu6lBqgdy	2025-09-16 08:39:30.827-05	f
+b7bd8b24-a871-42d4-ad12-45b62a0185a5	1	$2b$10$uuD6NnRsKr1D7yODKFi68e6b4Lc63xyuXKQT5d6nufjfvw3kbMtnW	2025-09-22 08:03:15.6-05	f
+\.
+
+
+--
+-- TOC entry 3509 (class 0 OID 19660)
+-- Dependencies: 218
+-- Data for Name: sectors; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.sectors (id, name, description, created_at, updated_at, deleted_at) FROM stdin;
+1	Financeiro		2025-09-02 19:34:17.05731	2025-09-03 09:42:53.340345	\N
+2	Direção		2025-09-03 08:54:51.740391	2025-09-03 09:43:16.383453	\N
+3	NTI		2025-09-03 09:03:30.114665	2025-09-03 09:43:26.48932	\N
+4	RH		2025-09-03 12:44:28.809676	2025-09-03 12:44:28.809676	\N
+\.
+
+
+--
+-- TOC entry 3524 (class 0 OID 19813)
+-- Dependencies: 233
+-- Data for Name: signatures; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.signatures (id, document_id, user_id, signature_data, position_data, created_at, updated_at, deleted_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3511 (class 0 OID 19674)
+-- Dependencies: 220
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, name, email, password, role, sector_id, created_at, updated_at, deleted_at) FROM stdin;
+1	Administrador Principal	admin@admin.com	$2b$12$E93GfhnIje8f1E8E1wGT2eNUPbl7a.XauPx8WHJpmZawRjx.2ckHe	admin	\N	2025-08-17 18:25:57.686141	2025-08-17 18:25:57.686141	\N
+17	Igor Gois	ig_orgabriel@hotmail.com	$2b$10$GHrFwiOE7bBtnGtaG9Q1iefjqQ861YSwIz91FFAS5pOc5F30OYcg.	admin	3	2025-09-02 14:36:11.439138	2025-09-03 10:01:24.989864	\N
+3	Test User	test@test.com	$2b$10$Uh6tEQWh.trqnbTuRdU4XuMGD9eCQYjxkpldYVBPjJp3mRcHYMXf.	user	3	2025-08-17 18:29:56.05724	2025-09-03 14:16:41.601249	\N
+5	Renan	renan@admin.com	$2b$10$E/x6sH42c6HQtO0Fhk5vtuBuA8SLMnreTCOyWg6Xqwul24Q4ooJhe	admin	3	2025-08-17 18:29:56.05724	2025-09-03 14:17:22.634435	\N
+4	Admin User	admin@test.com	$2b$10$AjgheV1BHkTtQrNkfaRQ8.aZfqGCknABLLc8skqssjacg7tyd85di	admin	3	2025-08-17 18:29:56.05724	2025-09-03 14:21:52.634979	\N
+6	Brasilia	brasilia@brasilia.com	$2b$10$9GUZ1TDZPRWlwxhDlKiv7esgErYXEKuqHvMz.9MrW55cyf.VG2Itq	user	3	2025-08-17 18:29:56.05724	2025-09-03 14:22:03.118894	\N
+2	Diego	diego.gregore@live.com	$2b$10$oRWTo4HelkX8useOxy0nZOGg7TbqdJvtLddVilxWAihJDSez25E3y	admin	3	2025-08-17 18:29:56.05724	2025-09-03 14:55:25.059492	\N
+\.
+
+
+--
+-- TOC entry 3546 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 15, true);
+
+
+--
+-- TOC entry 3547 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: document_allocation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.document_allocation_id_seq', 17, true);
+
+
+--
+-- TOC entry 3548 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: document_installments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.document_installments_id_seq', 44, true);
+
+
+--
+-- TOC entry 3549 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: document_signatories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.document_signatories_id_seq', 14, true);
+
+
+--
+-- TOC entry 3550 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: documents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.documents_id_seq', 8, true);
+
+
+--
+-- TOC entry 3551 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: files_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.files_id_seq', 1, true);
+
+
+--
+-- TOC entry 3552 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: fornecedores_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.fornecedores_id_seq', 265, true);
+
+
+--
+-- TOC entry 3553 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.migrations_id_seq', 14, true);
+
+
+--
+-- TOC entry 3554 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: sectors_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.sectors_id_seq', 4, true);
+
+
+--
+-- TOC entry 3555 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: signatures_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.signatures_id_seq', 1, false);
+
+
+--
+-- TOC entry 3556 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 17, true);
+
+
+--
+-- TOC entry 3346 (class 2606 OID 19843)
+-- Name: audit_logs PK_1bb179d048bbc581caa3b013439; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT "PK_1bb179d048bbc581caa3b013439" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3320 (class 2606 OID 19718)
+-- Name: fornecedores PK_6ba3f90e4a18a597d11b763fc02; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.fornecedores
+    ADD CONSTRAINT "PK_6ba3f90e4a18a597d11b763fc02" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3348 (class 2606 OID 19873)
+-- Name: files PK_6c16b9093a142e0e7613b04a3d9; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.files
+    ADD CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3316 (class 2606 OID 19701)
+-- Name: refresh_tokens PK_7d8bee0204106019488c4c50ffa; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT "PK_7d8bee0204106019488c4c50ffa" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3330 (class 2606 OID 19763)
+-- Name: document_installments PK_7e94db92f2f4ee4657c0f1babb3; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_installments
+    ADD CONSTRAINT "PK_7e94db92f2f4ee4657c0f1babb3" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3337 (class 2606 OID 19805)
+-- Name: document_allocation PK_80a9a73e82ef703d760d82cdcf0; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_allocation
+    ADD CONSTRAINT "PK_80a9a73e82ef703d760d82cdcf0" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3303 (class 2606 OID 19658)
+-- Name: migrations PK_8c82d7f526340ab734260ea46be; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.migrations
+    ADD CONSTRAINT "PK_8c82d7f526340ab734260ea46be" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3306 (class 2606 OID 19669)
+-- Name: sectors PK_923fdda0dc12f59add7b3a1782f; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sectors
+    ADD CONSTRAINT "PK_923fdda0dc12f59add7b3a1782f" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3311 (class 2606 OID 19684)
+-- Name: users PK_a3ffb1c0c8416b9fc6f907b7433; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3327 (class 2606 OID 19737)
+-- Name: documents PK_ac51aa5181ee2036f5ca482857c; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT "PK_ac51aa5181ee2036f5ca482857c" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3334 (class 2606 OID 19782)
+-- Name: document_signatories PK_c1493c48fc15d0bfcc9d6f5cfdf; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_signatories
+    ADD CONSTRAINT "PK_c1493c48fc15d0bfcc9d6f5cfdf" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3340 (class 2606 OID 19822)
+-- Name: signatures PK_f56eb3cd344ce7f9ae28ce814eb; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.signatures
+    ADD CONSTRAINT "PK_f56eb3cd344ce7f9ae28ce814eb" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3308 (class 2606 OID 19671)
+-- Name: sectors UQ_1a10b192342e5165948f4dccefc; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sectors
+    ADD CONSTRAINT "UQ_1a10b192342e5165948f4dccefc" UNIQUE (name);
+
+
+--
+-- TOC entry 3350 (class 2606 OID 19875)
+-- Name: files UQ_754cc13894f42935c314aa8b096; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.files
+    ADD CONSTRAINT "UQ_754cc13894f42935c314aa8b096" UNIQUE (file_hash);
+
+
+--
+-- TOC entry 3322 (class 2606 OID 19722)
+-- Name: fornecedores UQ_9322b113e67c56c81eeb562d6a4; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.fornecedores
+    ADD CONSTRAINT "UQ_9322b113e67c56c81eeb562d6a4" UNIQUE (cpf_cnpj);
+
+
+--
+-- TOC entry 3313 (class 2606 OID 19686)
+-- Name: users UQ_97672ac88f789774dd47f7c8be3; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE (email);
+
+
+--
+-- TOC entry 3324 (class 2606 OID 19720)
+-- Name: fornecedores UQ_c4bb02f22f5c76e41b61fa111ee; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.fornecedores
+    ADD CONSTRAINT "UQ_c4bb02f22f5c76e41b61fa111ee" UNIQUE (codigo);
+
+
+--
+-- TOC entry 3335 (class 1259 OID 19806)
+-- Name: IDX_ALLOCATION_DOCUMENT; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_ALLOCATION_DOCUMENT" ON public.document_allocation USING btree (document_id);
+
+
+--
+-- TOC entry 3341 (class 1259 OID 19846)
+-- Name: IDX_AUDIT_ACTION; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_AUDIT_ACTION" ON public.audit_logs USING btree (action);
+
+
+--
+-- TOC entry 3342 (class 1259 OID 19844)
+-- Name: IDX_AUDIT_ENTITY; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_AUDIT_ENTITY" ON public.audit_logs USING btree (entity_type, entity_id);
+
+
+--
+-- TOC entry 3343 (class 1259 OID 19847)
+-- Name: IDX_AUDIT_TIMESTAMP; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_AUDIT_TIMESTAMP" ON public.audit_logs USING btree ("timestamp");
+
+
+--
+-- TOC entry 3344 (class 1259 OID 19845)
+-- Name: IDX_AUDIT_USER; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_AUDIT_USER" ON public.audit_logs USING btree (user_id);
+
+
+--
+-- TOC entry 3325 (class 1259 OID 19741)
+-- Name: IDX_DOCUMENT_STATUS; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_DOCUMENT_STATUS" ON public.documents USING btree (status);
+
+
+--
+-- TOC entry 3317 (class 1259 OID 19723)
+-- Name: IDX_FORNECEDOR_CODIGO; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "IDX_FORNECEDOR_CODIGO" ON public.fornecedores USING btree (codigo);
+
+
+--
+-- TOC entry 3318 (class 1259 OID 19724)
+-- Name: IDX_FORNECEDOR_CPF_CNPJ; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "IDX_FORNECEDOR_CPF_CNPJ" ON public.fornecedores USING btree (cpf_cnpj);
+
+
+--
+-- TOC entry 3328 (class 1259 OID 19764)
+-- Name: IDX_INSTALLMENT_DOCUMENT; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_INSTALLMENT_DOCUMENT" ON public.document_installments USING btree (document_id);
+
+
+--
+-- TOC entry 3314 (class 1259 OID 19702)
+-- Name: IDX_REFRESH_TOKEN_USER; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_REFRESH_TOKEN_USER" ON public.refresh_tokens USING btree (user_id);
+
+
+--
+-- TOC entry 3304 (class 1259 OID 19672)
+-- Name: IDX_SECTOR_NAME; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "IDX_SECTOR_NAME" ON public.sectors USING btree (name);
+
+
+--
+-- TOC entry 3331 (class 1259 OID 19784)
+-- Name: IDX_SIGNATORY_DOC_ORDER; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_SIGNATORY_DOC_ORDER" ON public.document_signatories USING btree (document_id, "order");
+
+
+--
+-- TOC entry 3332 (class 1259 OID 19783)
+-- Name: IDX_SIGNATORY_DOC_USER; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "IDX_SIGNATORY_DOC_USER" ON public.document_signatories USING btree (document_id, user_id);
+
+
+--
+-- TOC entry 3338 (class 1259 OID 19823)
+-- Name: IDX_SIGNATURE_DOC_USER; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_SIGNATURE_DOC_USER" ON public.signatures USING btree (document_id, user_id);
+
+
+--
+-- TOC entry 3309 (class 1259 OID 19687)
+-- Name: IDX_USER_EMAIL; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "IDX_USER_EMAIL" ON public.users USING btree (email);
+
+
+--
+-- TOC entry 3360 (class 2606 OID 19807)
+-- Name: document_allocation FK_ALLOCATION_DOCUMENT; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_allocation
+    ADD CONSTRAINT "FK_ALLOCATION_DOCUMENT" FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3363 (class 2606 OID 19848)
+-- Name: audit_logs FK_AUDIT_USER; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT "FK_AUDIT_USER" FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3353 (class 2606 OID 19876)
+-- Name: documents FK_DOCUMENT_FILE; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT "FK_DOCUMENT_FILE" FOREIGN KEY (file_id) REFERENCES public.files(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3354 (class 2606 OID 19747)
+-- Name: documents FK_DOCUMENT_FORNECEDOR; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT "FK_DOCUMENT_FORNECEDOR" FOREIGN KEY (fornecedor_id) REFERENCES public.fornecedores(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3356 (class 2606 OID 19881)
+-- Name: document_installments FK_DOCUMENT_INSTALLMENT_FILE; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_installments
+    ADD CONSTRAINT "FK_DOCUMENT_INSTALLMENT_FILE" FOREIGN KEY (file_id) REFERENCES public.files(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3355 (class 2606 OID 19742)
+-- Name: documents FK_DOCUMENT_OWNER; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT "FK_DOCUMENT_OWNER" FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 3357 (class 2606 OID 19765)
+-- Name: document_installments FK_INSTALLMENT_DOCUMENT; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_installments
+    ADD CONSTRAINT "FK_INSTALLMENT_DOCUMENT" FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3352 (class 2606 OID 19703)
+-- Name: refresh_tokens FK_REFRESH_TOKEN_USER; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT "FK_REFRESH_TOKEN_USER" FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3358 (class 2606 OID 19785)
+-- Name: document_signatories FK_SIGNATORY_DOCUMENT; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_signatories
+    ADD CONSTRAINT "FK_SIGNATORY_DOCUMENT" FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3359 (class 2606 OID 19790)
+-- Name: document_signatories FK_SIGNATORY_USER; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.document_signatories
+    ADD CONSTRAINT "FK_SIGNATORY_USER" FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3361 (class 2606 OID 19824)
+-- Name: signatures FK_SIGNATURE_DOCUMENT; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.signatures
+    ADD CONSTRAINT "FK_SIGNATURE_DOCUMENT" FOREIGN KEY (document_id) REFERENCES public.documents(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3362 (class 2606 OID 19829)
+-- Name: signatures FK_SIGNATURE_USER; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.signatures
+    ADD CONSTRAINT "FK_SIGNATURE_USER" FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3351 (class 2606 OID 19688)
+-- Name: users FK_USER_SECTOR; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT "FK_USER_SECTOR" FOREIGN KEY (sector_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+-- Completed on 2025-09-18 18:06:22 -03
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict 522F1bwef98SvYVX6lgu9nBx48XLDltyIbvPyYkhhHgWqbNM4zjBEaHRXVVwtH0
+

@@ -1,29 +1,38 @@
-
-import { Module, forwardRef } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DocumentController } from './document.controller';
-import { DocumentService } from './document.service';
-import { Document } from './document.entity';
-import { DocumentSignatory } from './document-signatory.entity';
-import { DocumentAllocation } from './document-allocation.entity';
-import { DocumentInstallment } from './document-installment.entity';
-import { User } from '../user/user.entity';
-import { Fornecedor } from '../fornecedor/fornecedor.entity';
-import { MinioService } from './minio.service';
-import { PdfValidationService } from './pdf-validation.service';
-import { NotificationModule } from '../notification/notification.module';
-import { AuditLogModule } from '../audit-log/audit-log.module';
-import { AuthModule } from '../auth/auth.module';
+import { Module, forwardRef } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { DocumentController } from "./document.controller";
+import { DocumentService } from "./services/document.service";
+import {
+  Document,
+  DocumentSignatory,
+  DocumentAllocation,
+  DocumentInstallment,
+} from "./entities";
+import { User } from "../user/entities";
+import { Fornecedor } from "../fornecedor/entities/fornecedor.entity";
+import { PdfValidationService } from "./services/pdf-validation.service";
+import { NotificationModule } from "../notification/notification.module";
+import { AuditLogModule } from "../audit-log/audit-log.module";
+import { AuthModule } from "../auth/auth.module";
+import { FileModule } from "src/file/file.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, DocumentSignatory, DocumentAllocation, DocumentInstallment, User, Fornecedor]),
+    TypeOrmModule.forFeature([
+      Document,
+      DocumentSignatory,
+      DocumentAllocation,
+      DocumentInstallment,
+      User,
+      Fornecedor,
+    ]),
     forwardRef(() => NotificationModule),
     forwardRef(() => AuditLogModule),
     AuthModule,
+    FileModule,
   ],
   controllers: [DocumentController],
-  providers: [DocumentService, MinioService, PdfValidationService],
+  providers: [DocumentService, PdfValidationService],
   exports: [DocumentService],
 })
 export class DocumentModule {}

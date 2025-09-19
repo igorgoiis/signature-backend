@@ -1,0 +1,14 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "144.126.136.132",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "Assinaturas",
+      "database": "signature_db",
+      "username": "postgres",
+      "password": "dg!!#!((%$"
+    }
+  ]
+}

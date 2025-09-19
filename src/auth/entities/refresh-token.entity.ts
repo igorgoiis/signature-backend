@@ -1,25 +1,32 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
-import { User } from '../../user/user.entity'; // Corrected path
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+  JoinColumn,
+} from "typeorm";
+import { User } from "../../user/entities";
 
-@Entity('refresh_tokens')
+@Entity("refresh_tokens")
 export class RefreshToken {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
   user: User;
 
   @Index()
-  @Column()
-  userId: number; // Foreign key to User
+  @Column({ name: "user_id" })
+  userId: number;
 
-  @Column()
+  @Column({ name: "hashed_token" })
   hashedToken: string;
 
-  @Column({ type: 'timestamp with time zone' })
+  @Column({ type: "timestamp with time zone", name: "expires_at" })
   expiresAt: Date;
 
-  @Column({ default: false })
+  @Column({ default: false, name: "is_revoked" })
   isRevoked: boolean;
 }
-

@@ -1,8 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UserRole } from '../../user/user.entity'; // Adjust path as needed
-import { UserPublicProfile } from '../../user/user.service'; // Adjust path as needed
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ROLES_KEY } from "../decorators/roles.decorator";
+import { UserRole } from "../../user/enums";
+import { UserPublicProfile } from "src/user/interfaces"; // Adjust path as needed
+import { AuthenticatedUser } from "src/common/interfaces/authenticated-user.interface";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -10,10 +11,10 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // Get the required roles from the @Roles() decorator
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // If no roles are required for this route, allow access
     if (!requiredRoles) {
@@ -22,7 +23,9 @@ export class RolesGuard implements CanActivate {
 
     // Get the user object attached to the request by JwtAuthGuard
     // Assuming JwtAuthGuard attaches UserPublicProfile to request.user
-    const { user } = context.switchToHttp().getRequest<{ user: UserPublicProfile }>();
+    const { user } = context
+      .switchToHttp()
+      .getRequest<{ user: AuthenticatedUser }>();
 
     // Check if the user object exists and has a role
     if (!user || !user.role) {
@@ -33,4 +36,3 @@ export class RolesGuard implements CanActivate {
     return requiredRoles.some((role) => user.role === role);
   }
 }
-
