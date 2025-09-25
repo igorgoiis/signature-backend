@@ -45,15 +45,15 @@ export class DocumentInstallment implements IDocumentInstallment {
   paidDate: Date | null;
 
   @ApiProperty({ description: "Data de criação do registro" })
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
   @ApiProperty({ description: "Data da última atualização" })
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   updatedAt: Date;
 
   @ApiPropertyOptional({ description: "Data de exclusão (soft delete)" })
-  @DeleteDateColumn({ nullable: true, name: "deleted_at" })
+  @DeleteDateColumn({ type: "timestamptz", nullable: true, name: "deleted_at" })
   deletedAt?: Date;
 
   @ApiProperty({ description: "ID do documento associado" })

@@ -319,13 +319,13 @@ export class DocumentController {
     status: 200,
     description: "Parcela paga com sucesso",
   })
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.FINANCIAL)
   async installmentPayment(
     @Param("id", ParseIntPipe) documentId: number,
     @Param("installmentId", ParseIntPipe) installmentId: number,
     @Body() dto: PaymentInstallmentDto,
     @AuthenticatedUser() user: AuthenticatedUserInterface,
-  ): Promise<string> {
+  ): Promise<{ message: string }> {
     this.logger.log(
       `Payment request for installment ${installmentId} received for document ${documentId} from user ${user.id}`,
     );

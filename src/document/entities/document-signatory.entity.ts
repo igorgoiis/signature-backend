@@ -51,7 +51,7 @@ export class DocumentSignatory implements IDocumentSignatory {
   status: SignatoryStatus;
 
   @ApiPropertyOptional({ description: "Data e hora da assinatura" })
-  @Column({ type: "timestamp", nullable: true, name: "signed_at" })
+  @Column({ type: "timestamptz", nullable: true, name: "signed_at" })
   signedAt: Date | null;
 
   @ApiPropertyOptional({ description: "Motivo da rejeição, se aplicável" })
@@ -59,15 +59,15 @@ export class DocumentSignatory implements IDocumentSignatory {
   rejectionReason: string | null;
 
   @ApiProperty({ description: "Data de criação do registro" })
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
   @ApiProperty({ description: "Data da última atualização" })
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   updatedAt: Date;
 
   @ApiPropertyOptional({ description: "Data de exclusão (soft delete)" })
-  @DeleteDateColumn({ nullable: true, name: "deleted_at" })
+  @DeleteDateColumn({ type: "timestamptz", nullable: true, name: "deleted_at" })
   deletedAt?: Date;
 
   // Relacionamentos

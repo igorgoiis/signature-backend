@@ -16,11 +16,11 @@ const configService = new ConfigService();
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: configService.get<string>("DB_HOST", "144.126.136.132"),
+  host: configService.get<string>("DB_HOST", "portainer.juagro.com.br"),
   port: configService.get<number>("DB_PORT", 5432),
   username: configService.get<string>("DB_USERNAME", "postgres"),
-  password: configService.get<string>("DB_PASSWORD", "dg!!#!((%$"),
-  database: configService.get<string>("DB_DATABASE", "signature_db"),
+  password: configService.get<string>("DB_PASSWORD", "Fo4rESD4Qr43"),
+  database: configService.get<string>("DB_DATABASE", "signaturedb"),
   entities: [
     User,
     Sector,

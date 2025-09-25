@@ -51,7 +51,7 @@ import { File } from "./file/entities";
           Fornecedor, // Add Fornecedor entity
         ],
         migrations: ["dist/migrations/*.js"],
-        migrationsRun: false,
+        migrationsRun: true,
         synchronize: false, // Disable synchronize for production
       }),
       inject: [ConfigService],

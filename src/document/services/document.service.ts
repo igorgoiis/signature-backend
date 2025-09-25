@@ -396,7 +396,7 @@ export class DocumentService {
     installmentId: number,
     dto: PaymentInstallmentDto,
     userId: number,
-  ): Promise<string> {
+  ): Promise<{ message: string }> {
     try {
       const document = await this.documentRepository.findOne({
         where: { id: documentId },
@@ -455,7 +455,7 @@ export class DocumentService {
         },
       );
 
-      return "Pagamento realizado com sucesso";
+      return { message: "Pagamento realizado com sucesso" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
 

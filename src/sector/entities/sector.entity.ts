@@ -24,12 +24,12 @@ export class Sector {
   users: User[];
 
   // Adicionar campos de auditoria
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: "deleted_at" })
+  @DeleteDateColumn({ type: "timestamptz", name: "deleted_at" })
   deletedAt: Date;
 }

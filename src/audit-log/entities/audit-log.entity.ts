@@ -22,7 +22,7 @@ export class AuditLog {
   @ApiProperty({ description: "ID único do log de auditoria", example: 1 })
   id: number;
 
-  @CreateDateColumn({ type: "timestamp with time zone" })
+  @CreateDateColumn({ type: "timestamptz" })
   @ApiProperty({
     description: "Data e hora da ação",
     example: "2023-08-17T03:01:00.000Z",

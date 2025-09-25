@@ -24,7 +24,7 @@ export class RefreshToken {
   @Column({ name: "hashed_token" })
   hashedToken: string;
 
-  @Column({ type: "timestamp with time zone", name: "expires_at" })
+  @Column({ type: "timestamptz", name: "expires_at" })
   expiresAt: Date;
 
   @Column({ default: false, name: "is_revoked" })

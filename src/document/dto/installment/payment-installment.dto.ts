@@ -1,10 +1,4 @@
-import {
-  IsNumber,
-  IsDateString,
-  IsOptional,
-  IsString,
-  Min,
-} from "class-validator";
+import { IsNumber, IsDateString } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class PaymentInstallmentDto {
@@ -17,7 +11,7 @@ export class PaymentInstallmentDto {
   })
   paymentDate: string;
 
-  @IsString()
+  @IsNumber()
   @ApiPropertyOptional({
     description: "Descrição adicional da parcela",
     example: "Primeira parcela do contrato",

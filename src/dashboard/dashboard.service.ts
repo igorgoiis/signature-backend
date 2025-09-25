@@ -4,7 +4,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, Between } from "typeorm";
+import { Repository, Between, IsNull } from "typeorm";
 import { Document } from "../document/entities/document.entity";
 import { User } from "../user/entities";
 import { AuditLog } from "../audit-log/entities/audit-log.entity";
@@ -48,36 +48,17 @@ export class DashboardService {
         `Getting dashboard stats for user ${currentUser.id} with role ${currentUser.role}`,
       );
 
-      // Create filter based on user role and query params
-      const filter = this.createStatsFilter(currentUser, queryDto);
-
-      // Get date range for filtering
-      const dateRange = this.getDateRangeFromQuery(queryDto);
-      if (dateRange.startDate && dateRange.endDate) {
-        filter.startDate = dateRange.startDate;
-        filter.endDate = dateRange.endDate;
-      }
-
-      // Set options for filtering
-      const options: StatsFilterOptions = {
-        filterBySector:
-          currentUser.role !== UserRole.ADMIN && !!currentUser.sector,
-        filterByDateRange: !!(filter.startDate && filter.endDate),
-      };
-
       // Get all required statistics in parallel
       const [totalDocuments, pendingDocuments, approvedDocuments, activeUsers] =
         await Promise.all([
-          this.getDocumentCount(filter, options),
-          this.getDocumentCount(
-            { ...filter, status: DocumentStatus.PENDING },
-            options,
-          ),
-          this.getDocumentCount(
-            { ...filter, status: DocumentStatus.COMPLETED },
-            options,
-          ),
-          this.getActiveUsersCount(filter, options),
+          this.documentRepository.count(),
+          this.documentRepository.count({
+            where: { status: DocumentStatus.PENDING },
+          }),
+          this.documentRepository.count({
+            where: { status: DocumentStatus.COMPLETED },
+          }),
+          this.userRepository.count({ where: { deletedAt: IsNull() } }),
         ]);
 
       return {

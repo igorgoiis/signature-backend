@@ -52,6 +52,7 @@ export class SectorService {
       this.logger.log(`Criando novo setor: ${createSectorDto.name}`);
 
       const sector = this.sectorRepository.create(createSectorDto);
+
       const savedSector = await this.sectorRepository.save(sector);
 
       await this.auditLogService.logAction(
@@ -70,6 +71,8 @@ export class SectorService {
       if (error instanceof HttpException) {
         throw error;
       }
+
+      this.logger.error(`Erro ao criar setor: ${error.message}`, error.stack);
 
       throw new HttpException(
         "Houve um erro ao tentar criar o setor, por favor tente novamente.",

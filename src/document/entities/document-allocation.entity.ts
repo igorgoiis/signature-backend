@@ -46,15 +46,15 @@ export class DocumentAllocation implements IDocumentAllocation {
   percentual: number;
 
   @ApiProperty({ description: "Data de criação do registro" })
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
   @ApiProperty({ description: "Data da última atualização" })
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   updatedAt: Date;
 
   @ApiPropertyOptional({ description: "Data de exclusão (soft delete)" })
-  @DeleteDateColumn({ nullable: true, name: "deleted_at" })
+  @DeleteDateColumn({ type: "timestamptz", nullable: true, name: "deleted_at" })
   deletedAt?: Date;
 
   // Relacionamentos
