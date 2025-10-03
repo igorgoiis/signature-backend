@@ -24,5 +24,6 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_USE_SSL: "false"
       MINIO_BUCKET_NAME: signatures
+      FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "3440:3440"

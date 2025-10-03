@@ -46,6 +46,7 @@ import { UserRole } from "src/user/enums";
 import { AuthenticatedUser } from "src/common/decorators/authenticated-user.decorator";
 import { AuthenticatedUser as AuthenticatedUserInterface } from "src/common/interfaces/authenticated-user.interface";
 import { PaymentInstallmentDto } from "./dto/installment/payment-installment.dto";
+import { DocumentInstalmentQueryDto } from "./dto/document/document-installment-query.dto";
 
 @ApiTags("documents")
 @Controller("api/documents")
@@ -423,8 +424,12 @@ export class DocumentController {
     description: "Documentos encontrado com sucesso",
   })
   @Roles(UserRole.ADMIN)
-  async findInstallmentsForExpiredAndUpcomingDocuments(): Promise<Document[]> {
-    return await this.documentService.findInstallmentsForExpiredAndUpcomingDocuments();
+  async findInstallmentsOfDocuments(
+    @Query() dateRangeFilter: DocumentInstalmentQueryDto,
+  ): Promise<Document[]> {
+    return await this.documentService.findInstallmentsOfDocuments(
+      dateRangeFilter,
+    );
   }
 
   @Get(":id")

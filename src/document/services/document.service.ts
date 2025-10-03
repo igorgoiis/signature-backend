@@ -8,7 +8,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { LessThanOrEqual, Repository } from "typeorm";
+import { Between, FindOptionsWhere, Repository } from "typeorm";
 import { Document } from "../entities/document.entity";
 import {
   UpdateDocumentDto,
@@ -21,17 +21,17 @@ import {
   DocumentAllocation,
   DocumentSignatory,
 } from "../entities";
-import { User } from "../../user/entities/user.entity";
-import { Fornecedor } from "../../fornecedor/entities/fornecedor.entity";
+import { User } from "../../user/entities";
+import { Fornecedor } from "../../fornecedor/entities";
 import { AuditLogService } from "../../audit-log/audit-log.service";
 import { Readable } from "stream";
 import { DocumentStatus, DocumentType, SignatoryStatus } from "../types";
 import { DocumentQueryDto } from "../dto/document/document-query.dto";
 import { FileService } from "src/file/services/file.service";
-import { RecentActivityActions } from "src/dashboard/constants/dashboard.constants";
 import { AuditAction } from "src/audit-log/constants/audit-actions.constant";
-import { addDays } from "date-fns";
 import { PaymentInstallmentDto } from "../dto/installment/payment-installment.dto";
+import { DocumentInstalmentQueryDto } from "../dto/document/document-installment-query.dto";
+
 @Injectable()
 export class DocumentService {
   private readonly logger = new Logger(DocumentService.name);
@@ -646,11 +646,6 @@ export class DocumentService {
         error.stack,
       );
 
-      // Se houve erro no processamento do documento, o arquivo já está no MinIO.
-      // Você pode adicionar uma lógica aqui para remover o arquivo do MinIO se
-      // o processamento falhar, mas isso introduz complexidade de transação distribuída.
-      // Uma alternativa é ter um job de limpeza que remove arquivos órfãos no MinIO.
-
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException
@@ -664,14 +659,33 @@ export class DocumentService {
     }
   }
 
-  async findInstallmentsForExpiredAndUpcomingDocuments(): Promise<Document[]> {
+  async findInstallmentsOfDocuments(
+    dateRangeFilter: DocumentInstalmentQueryDto,
+  ): Promise<Document[]> {
     try {
-      const goalDate = addDays(new Date(), 5);
+      let where:
+        | FindOptionsWhere<Document>
+        | FindOptionsWhere<Document>[]
+        | undefined = undefined;
+
+      if (dateRangeFilter.startDate && dateRangeFilter.endDate) {
+        const startDate = new Date(dateRangeFilter.startDate);
+        const endDate = new Date(dateRangeFilter.endDate);
+
+        if (startDate.toDateString() === endDate.toDateString()) {
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+        }
+
+        where = {
+          installments: {
+            dueDate: Between(startDate, endDate),
+          },
+        };
+      }
 
       const documents = await this.documentRepository.find({
-        where: {
-          installments: { dueDate: LessThanOrEqual(goalDate), isPaid: false },
-        },
+        where,
         relations: {
           allocations: true,
           fornecedor: true,
@@ -680,6 +694,12 @@ export class DocumentService {
             user: true,
           },
           owner: true,
+        },
+        order: {
+          createdAt: "desc",
+          installments: {
+            installmentNumber: "asc",
+          },
         },
       });
 
