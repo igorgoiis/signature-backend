@@ -477,7 +477,7 @@ export class DocumentService {
 
     const document = await this.documentRepository.findOne({
       where: { id: documentId },
-      relations: ["signatories", "signatories.user"],
+      relations: { signatories: { user: true } },
     });
 
     if (!document) {

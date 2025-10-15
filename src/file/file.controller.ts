@@ -66,7 +66,7 @@ export class FileController {
     try {
       console.log({ file });
       this.logger.log(
-        `File upload request received from user ${req.user?.sub || "anonymous"}`,
+        `File upload request received from user ${req.user?.id || "anonymous"}`,
       );
       const uploadedFile = await this.fileService.uploadFileToStorage(file);
       this.logger.log(`File uploaded successfully: ${uploadedFile.filePath}`);

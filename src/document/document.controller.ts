@@ -47,6 +47,7 @@ import { AuthenticatedUser } from "src/common/decorators/authenticated-user.deco
 import { AuthenticatedUser as AuthenticatedUserInterface } from "src/common/interfaces/authenticated-user.interface";
 import { PaymentInstallmentDto } from "./dto/installment/payment-installment.dto";
 import { DocumentInstalmentQueryDto } from "./dto/document/document-installment-query.dto";
+import { RejectDocumentDto } from "./dto/document/reject-document.dto";
 
 @ApiTags("documents")
 @Controller("api/documents")
@@ -123,7 +124,6 @@ export class DocumentController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Erro interno do servidor.",
   })
-  @Roles(UserRole.ADMIN)
   async processDocument(
     @Body() createDocumentDto: CreateDocumentDto,
     @Request() req: any,
@@ -287,6 +287,141 @@ export class DocumentController {
     } catch (error) {
       this.logger.error(
         `Failed to sign document ${documentId}: ${error.message}`,
+        error.stack,
+      );
+      return {
+        success: false,
+        message:
+          error.message || "Erro interno do servidor ao assinar documento.",
+        error: error.name || "Internal Server Error",
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  @Post(":id/reject")
+  @ApiOperation({
+    summary: "Rejeitar documento",
+    description: "Permite que um signatário rejeite um documento específico.",
+  })
+  @ApiParam({
+    name: "id",
+    description: "ID único do documento a ser rejeitado",
+    type: "number",
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Documento rejeitado com sucesso",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean", example: true },
+        message: {
+          type: "string",
+          example: "Documento rejeitado com sucesso.",
+        },
+        data: {
+          type: "object",
+          properties: {
+            id: { type: "number", example: 1 },
+            status: { type: "string", example: "REJECTED" },
+            signedAt: { type: "string", format: "date-time" },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Requisição inválida",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean", example: false },
+        message: {
+          type: "string",
+          example: "Não é sua vez de rejeitar ou documento já rejeitado.",
+        },
+        error: { type: "string", example: "Bad Request" },
+        statusCode: { type: "number", example: 400 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Não autorizado",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean", example: false },
+        message: {
+          type: "string",
+          example: "Token de acesso inválido ou expirado.",
+        },
+        error: { type: "string", example: "Unauthorized" },
+        statusCode: { type: "number", example: 401 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Documento ou signatário não encontrado",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean", example: false },
+        message: {
+          type: "string",
+          example: "Documento ou signatário não encontrado.",
+        },
+        error: { type: "string", example: "Not Found" },
+        statusCode: { type: "number", example: 404 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: "Erro interno do servidor",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean", example: false },
+        message: {
+          type: "string",
+          example: "Erro interno do servidor ao assinar documento.",
+        },
+        error: { type: "string", example: "Internal Server Error" },
+        statusCode: { type: "number", example: 500 },
+      },
+    },
+  })
+  async rejectDocument(
+    @Param("id", ParseIntPipe) documentId: number,
+    @Body() body: RejectDocumentDto,
+    @Request() req: any,
+  ) {
+    try {
+      this.logger.log(
+        `Reject request received for document ${documentId} from user ${req.user.id}`,
+      );
+      const rejectedDocument = await this.documentService.rejectDocument(
+        documentId,
+        req.user.id as number,
+        body.reason,
+      );
+      return {
+        success: true,
+        message: "Documento rejeitado com sucesso.",
+        data: {
+          id: rejectedDocument.id,
+          status: rejectedDocument.status,
+          signedAt: rejectedDocument.signedAt,
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to reject document ${documentId}: ${error.message}`,
         error.stack,
       );
       return {

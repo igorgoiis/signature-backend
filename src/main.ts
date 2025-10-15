@@ -21,11 +21,10 @@ async function bootstrap() {
   const port = configService.get<number>("PORT", 3000);
 
   // Configuração de CORS
-  app.enableCors();
-  // app.enableCors({
-  //   origin: frontendUrl,
-  //   credentials: true,
-  // });
+  app.enableCors({
+    origin: frontendUrl,
+    credentials: true,
+  });
 
   // Usar helmet - não será um erro com a configuração de ESLint atualizada
   app.use(helmet());
